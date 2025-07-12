@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Emergency Safety App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            color: #333; /* Default text color */
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* Enhanced shadow */
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
+        }
+
+        /* Screen visibility */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+            text-shadow: 0 5px 15px rgba(231, 76, 60, 0.3); /* Text shadow for logo */
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .hindi-text {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: -5px; /* Adjust spacing */
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        input[type="text"], input[type="tel"], select {
+            width: 100%;
+            padding: 12px 15px; /* Slightly more padding */
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #f9f9f9; /* Light background for inputs */
+        }
+
+        input[type="text"]:focus, input[type="tel"]:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Focus glow */
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px; /* More rounded buttons */
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px 5px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); /* Button shadow */
+        }
+
+        .btn:hover {
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-sos {
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            font-size: 24px;
+            padding: 20px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4); /* SOS button shadow */
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border: 5px solid white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .btn-sos:hover {
+            transform: translateY(-3px) scale(1.05); /* More pronounced hover */
+            box-shadow: 0 15px 40px rgba(255, 71, 87, 0.5);
+        }
+
+        .btn-sos:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .btn-sos.pressing {
+            animation: sosPress 0.1s infinite;
+            background: linear-gradient(45deg, #ff6b7a, #ff5252);
+        }
+
+        @keyframes sosPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .sos-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 8px;
+            background: white;
+            transition: width 0.1s linear;
+            border-radius: 0 0 5px 5px; /* Rounded bottom corners */
+        }
+
+        /* Status Div */
+        .status {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: left;
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); /* Inner shadow for depth */
+        }
+
+        .status.listening {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .status.alert {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .status.success {
+            background: #d1ecf1; /* Light blue for success */
+            color: #0c5460;
+            border-color: #bee5eb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+
+        /* Voice Indicator */
+        .voice-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #3498db;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); /* Pulse effect */
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .voice-indicator.active {
+            background: #e74c3c;
+            animation: fastPulse 0.5s infinite;
+            box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(52, 152, 219, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); }
+        }
+
+        @keyframes fastPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(231, 76, 60, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5); }
+        }
+
+        /* Emergency Info Section */
+        .emergency-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 243, 205, 0.5); /* Info box shadow */
+        }
+        .emergency-info h3 {
+            margin-top: 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .emergency-info p {
+            margin-bottom: 5px;
+        }
+
+        /* Contact Info Section */
+        .contact-info {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .contact-info h3 {
+            margin-top: 0;
+            color: #343a40;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .contacts-list {
+            margin-top: 15px;
+            max-height: 150px; /* Limit height for scrolling */
+            overflow-y: auto; /* Enable scrolling */
+            padding-right: 10px; /* Space for scrollbar */
+        }
+        .contacts-list::-webkit-scrollbar { /* Style scrollbar */
+            width: 6px;
+        }
+        .contacts-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .contacts-list::-webkit-scrollbar-thumb {
+            background: #aaa;
+            border-radius: 3px;
+        }
+        .contacts-list::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        .contact-item {
+            background: white;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .contact-item strong {
+            color: #495057;
+        }
+        .contact-item span {
+            color: #6c757d;
+            margin-left: 5px;
+        }
+
+        .add-contact-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+            box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+        }
+        .add-contact-btn:hover {
+            background: #218838;
+        }
+
+        .remove-contact-btn {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-left: 10px; /* Space from number */
+        }
+        .remove-contact-btn:hover {
+            background: #c82333;
+        }
+
+        /* Battery Info */
+        .battery-info {
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            text-align: left;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .battery-info span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Location Sharing */
+        .location-sharing {
+            background: #d1ecf1;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(209, 236, 241, 0.6);
+        }
+        .location-sharing h3 {
+            margin-top: 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .location-sharing p {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        /* Silent Mode */
+        .silent-mode {
+            background: #f8d7da;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(248, 215, 218, 0.5);
+        }
+        .silent-mode h3 {
+            margin-top: 0;
+            color: #721c24;
+            font-size: 18px;
+        }
+        .silent-area {
+            width: 100%;
+            height: 80px;
+            background: #6c757d;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            margin-top: 10px;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+        .silent-area.active {
+            background: #e74c3c;
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+            transform: scale(1.02);
+        }
+        .silent-area:active {
+            transform: scale(0.98);
+        }
+
+        /* Settings Section */
+        .settings-section {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .settings-section h3 {
+            margin-top: 0;
+            color: #343a40;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .settings-section div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .settings-section span {
+            font-size: 15px;
+            color: #34495e;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3; /* Blue when checked */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Vibration Test Animation */
+        .vibration-test {
+            color: #e74c3c;
+            font-size: 30px;
+            animation: shake 0.5s;
+            display: inline-block; /* Needed for transform */
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-2deg); }
+            50% { transform: translateX(5px) rotate(2deg); }
+            75% { transform: translateX(-5px) rotate(-2deg); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Screen -->
+        <div class="screen setup-screen active" id="setupScreen">
+            <div class="logo">🚨</div>
+            <h1>Advanced Emergency Safety App</h1>
+            <p class="hindi-text">उन्नत आपातकालीन सुरक्षा ऐप</p>
+            
+            <div class="input-group">
+                <label for="contactName">Emergency Contact Name / संपर्क व्यक्ति का नाम:</label>
+                <input type="text" id="contactName" placeholder="जैसे: मम्मी, पापा, भाई" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="contactNumber">Emergency Contact Number / मोबाइल नंबर:</label>
+                <input type="tel" id="contactNumber" placeholder="+91-9876543210" required>
+            </div>
+            
+            <button class="btn add-contact-btn" onclick="addContact()">Add Contact / संपर्क जोड़ें</button>
+            
+            <div class="contact-info" style="margin-top: 15px;">
+                <h3>Added Contacts / जोड़े गए संपर्क:</h3>
+                <div class="contacts-list" id="contactsContainer"></div>
+            </div>
+            
+            <div class="input-group">
+                <label for="locationFreq">Location Sharing Frequency / स्थान साझाकरण आवृत्ति:</label>
+                <select id="locationFreq">
+                    <option value="60">Every 1 minute / हर 1 मिनट</option>
+                    <option value="300">Every 5 minutes / हर 5 मिनट</option>
+                    <option value="600">Every 10 minutes / हर 10 मिनट</option>
+                    <option value="0">Only once / केवल एक बार</option>
+                </select>
+            </div>
+            
+            <div class="emergency-info">
+                <h3>📱 कैसे काम करता है:</h3>
+                <p>• "बचाओ" शब्द को 3 बार कहें</p>
+                <p>• SOS बटन को 3 सेकंड दबाकर रखें</p>
+                <p>• Silent mode में hold करें</p>
+                <p>• Automatic call और location SMS भेजा जाएगा</p>
+            </div>
+            
+            <button class="btn" onclick="saveSettings()">Save Settings / सेटिंग्स सेव करें</button>
+        </div>
+
+        <!-- Main Screen -->
+        <div class="screen main-screen" id="mainScreen">
+            <div class="logo">🔒</div>
+            <h1>Safety Mode Active</h1>
+            <p class="hindi-text">सुरक्षा मोड सक्रिय है</p>
+            
+            <div class="voice-indicator" id="voiceIndicator">🎤</div>
+            
+            <div class="contact-info" id="contactInfo">
+                <h3>Emergency Contacts:</h3>
+                <div class="contacts-list" id="savedContacts"></div>
+            </div>
+            
+            <div class="battery-info" id="batteryInfo">
+                <span id="batteryLevel">🔋 Battery: Checking...</span>
+            </div>
+            
+            <div class="status listening" id="statusDiv">
+                <p>🎤 आवाज सुन रहा है... "बचाओ" कहें (3 बार)</p>
+                <p>Voice Recognition Count: <span id="voiceCount">0</span>/3</p>
+            </div>
+            
+            <!-- SOS Button -->
+            <div style="margin: 30px 0;">
+                <button class="btn-sos" id="sosButton" 
+                        onmousedown="startSOSPress()" 
+                        onmouseup="stopSOSPress()" 
+                        onmouseleave="stopSOSPress()"
+                        ontouchstart="startSOSPress()" 
+                        ontouchend="stopSOSPress()">
+                    🆘 SOS
+                    <div class="sos-progress" id="sosProgress"></div>
+                </button>
+                <p class="hindi-text">3 सेकंड तक दबाकर रखें</p>
+            </div>
+            
+            <!-- Silent Mode -->
+            <div class="silent-mode">
+                <h3>🤫 Silent Emergency Mode</h3>
+                <div class="silent-area" id="silentArea" 
+                     onmousedown="startSilentMode()" 
+                     onmouseup="stopSilentMode()"
+                     ontouchstart="startSilentMode()" 
+                     ontouchend="stopSilentMode()">
+                    Hold for Silent Emergency
+                </div>
+                <p class="hindi-text">चुप रहकर आपातकाल के लिए दबाएं</p>
+            </div>
+            
+            <!-- Settings -->
+            <div class="settings-section">
+                <h3>⚙️ Settings</h3>
+                <div style="margin: 10px 0;">
+                    <label for="backgroundMode">Background Mode / बैकग्राउंड मोड:</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="backgroundMode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label for="vibrationMode">Vibration Alerts / कंपन अलर्ट:</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="vibrationMode" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="location-sharing" id="locationSharing">
+                <h3>📍 Location Sharing Active</h3>
+                <p>Frequency: <span id="currentFreq">Every 1 minute</span></p>
+                <p>Last Update: <span id="lastUpdate">Never</span></p>
+            </div>
+            
+            <button class="btn btn-danger" onclick="testEmergency()">Test Emergency / आपातकाल टेस्ट करें</button>
+            <button class="btn" onclick="showSetupScreen()">Edit Contacts / संपर्क बदलें</button>
+            <button class="btn" onclick="testVibration()">Test Vibration / कंपन टेस्ट करें</button>
+        </div>
+    </div>
+
+    <script>
+        let emergencyContacts = [];
+        let locationFrequency = 60; // seconds
+        let voiceRecognition = null;
+        let voiceCount = 0;
+        let isListening = false;
+        let emergencyTriggered = false;
+        let sosTimer = null;
+        let silentTimer = null;
+        let locationSharingInterval = null;
+        let batteryLevel = 100;
+        let isBackgroundMode = false;
+        let isVibrationEnabled = true;
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setupScreen');
+        const mainScreen = document.getElementById('mainScreen');
+        const sosButton = document.getElementById('sosButton');
+        const sosProgress = document.getElementById('sosProgress');
+        const silentArea = document.getElementById('silentArea');
+        const statusDiv = document.getElementById('statusDiv');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+        const voiceCountSpan = document.getElementById('voiceCount');
+        const savedContactsDiv = document.getElementById('savedContacts');
+        const contactsContainer = document.getElementById('contactsContainer');
+        const contactNameInput = document.getElementById('contactName');
+        const contactNumberInput = document.getElementById('contactNumber');
+        const locationFreqSelect = document.getElementById('locationFreq');
+        const backgroundModeToggle = document.getElementById('backgroundMode');
+        const vibrationModeToggle = document.getElementById('vibrationMode');
+        const batteryLevelSpan = document.getElementById('batteryLevel');
+        const currentFreqSpan = document.getElementById('currentFreq');
+        const lastUpdateSpan = document.getElementById('lastUpdate');
+
+
+        // Initialize app
+        window.onload = () => {
+            checkBattery();
+            requestPermissions();
+            loadSettings();
+            updateContactsList(); // Ensure list is updated even if no settings loaded
+        };
+
+        // Request necessary permissions
+        function requestPermissions() {
+            if (navigator.permissions) {
+                navigator.permissions.query({name: 'microphone'}).then(function(result) {
+                    if (result.state !== 'granted') {
+                        // Optionally prompt for permission here if not granted
+                        console.log('Microphone permission not granted.');
+                    }
+                });
+                navigator.geolocation.getCurrentPosition(() => {}, (error) => {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert('कृपया स्थान की अनुमति दें / Please allow location access for the app to function correctly.');
+                    }
+                });
+            }
+        }
+
+        // Check battery level
+        function checkBattery() {
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function(battery) {
+                    updateBatteryDisplay(battery.level * 100);
+                    battery.addEventListener('levelchange', () => updateBatteryDisplay(battery.level * 100));
+                }).catch(err => {
+                    console.error("Battery API not available:", err);
+                    batteryLevelSpan.textContent = '🔋 Battery: N/A';
+                });
+            } else {
+                batteryLevelSpan.textContent = '🔋 Battery: N/A';
+            }
+        }
+
+        // Update battery display
+        function updateBatteryDisplay(level) {
+            batteryLevel = Math.round(level);
+            let batteryIcon = '🔋';
+            if (batteryLevel < 20) batteryIcon = '🪫';
+            batteryLevelSpan.textContent = `${batteryIcon} Battery: ${batteryLevel}%`;
+        }
+
+        // Add contact function
+        function addContact() {
+            const name = contactNameInput.value.trim();
+            const number = contactNumberInput.value.trim();
+            
+            if (name === '' || number === '') {
+                alert('कृपया नाम और नंबर दोनों भरें / Please fill both name and number');
+                return;
+            }
+            
+            // Basic phone number validation (can be improved)
+            if (!/^\+?[0-9-]+$/.test(number)) {
+                 alert('कृपया एक वैध मोबाइल नंबर दर्ज करें / Please enter a valid mobile number.');
+                 return;
+            }
+
+            if (emergencyContacts.length >= 5) {
+                alert('अधिकतम 5 संपर्क जोड़े जा सकते हैं / Maximum 5 contacts can be added');
+                return;
+            }
+            
+            emergencyContacts.push({name, number});
+            updateContactsList();
+            
+            // Clear input fields
+            contactNameInput.value = '';
+            contactNumberInput.value = '';
+        }
+
+        // Update contacts list display
+        function updateContactsList() {
+            contactsContainer.innerHTML = '';
+            
+            if (emergencyContacts.length === 0) {
+                contactsContainer.innerHTML = '<p style="color: #6c757d;">No contacts added yet. / अभी तक कोई संपर्क नहीं जोड़ा गया है।</p>';
+                return;
+            }
+
+            emergencyContacts.forEach((contact, index) => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                contactDiv.innerHTML = `
+                    <div>
+                        <strong>${contact.name}</strong><br>
+                        <span>📞 ${contact.number}</span>
+                    </div>
+                    <button class="remove-contact-btn" onclick="removeContact(${index})">Remove</button>
+                `;
+                contactsContainer.appendChild(contactDiv);
+            });
+        }
+
+        // Remove contact function
+        function removeContact(index) {
+            if (confirm('Are you sure you want to remove this contact?')) {
+                emergencyContacts.splice(index, 1);
+                updateContactsList();
+            }
+        }
+
+        // Save settings and transition to main screen
+        function saveSettings() {
+            if (emergencyContacts.length === 0) {
+                alert('कम से कम एक संपर्क जोड़ें / Please add at least one contact');
+                return;
+            }
+            
+            locationFrequency = parseInt(locationFreqSelect.value);
+            isBackgroundMode = backgroundModeToggle.checked;
+            isVibrationEnabled = vibrationModeToggle.checked;
+
+            localStorage.setItem('emergencyAppContacts', JSON.stringify(emergencyContacts));
+            localStorage.setItem('emergencyAppLocationFreq', locationFrequency);
+            localStorage.setItem('emergencyAppBackgroundMode', isBackgroundMode);
+            localStorage.setItem('emergencyAppVibrationMode', isVibrationEnabled);
+            
+            updateMainScreenContactsDisplay();
+            updateLocationFrequencyDisplay();
+            
+            setupScreen.classList.remove('active');
+            mainScreen.classList.add('active');
+            
+            startVoiceRecognition();
+            startLocationSharing();
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedContacts = localStorage.getItem('emergencyAppContacts');
+            const savedFreq = localStorage.getItem('emergencyAppLocationFreq');
+            const savedBgMode = localStorage.getItem('emergencyAppBackgroundMode');
+            const savedVibMode = localStorage.getItem('emergencyAppVibrationMode');
+
+            if (savedContacts) {
+                emergencyContacts = JSON.parse(savedContacts);
+                updateContactsList();
+            }
+            if (savedFreq !== null) {
+                locationFrequency = parseInt(savedFreq);
+                locationFreqSelect.value = locationFrequency;
+            }
+            if (savedBgMode !== null) {
+                isBackgroundMode = (savedBgMode === 'true');
+                backgroundModeToggle.checked = isBackgroundMode;
+            }
+            if (savedVibMode !== null) {
+                isVibrationEnabled = (savedVibMode === 'true');
+                vibrationModeToggle.checked = isVibrationEnabled;
+            }
+        }
+
+        // Show setup screen for editing
+        function showSetupScreen() {
+            stopVoiceRecognition();
+            stopLocationSharing();
+            mainScreen.classList.remove('active');
+            setupScreen.classList.add('active');
+            updateStatus('Settings screen opened. Save to re-activate safety mode.', 'warning');
+        }
+
+        // Update main screen contacts display
+        function updateMainScreenContactsDisplay() {
+            savedContactsDiv.innerHTML = '';
+            emergencyContacts.forEach(contact => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                contactDiv.innerHTML = `
+                    <div>
+                        <strong>${contact.name}</strong><br>
+                        <span>📞 ${contact.number}</span>
+                    </div>
+                `;
+                savedContactsDiv.appendChild(contactDiv);
+            });
+             if (emergencyContacts.length === 0) {
+                savedContactsDiv.innerHTML = '<p style="color: #6c757d;">No contacts saved. / कोई संपर्क सहेजा नहीं गया है।</p>';
+            }
+        }
+
+        // Start voice recognition
+        function startVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                updateStatus('⚠️ Voice recognition not supported in this browser.', 'alert');
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            voiceRecognition = new SpeechRecognition();
+            
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = true;
+            voiceRecognition.lang = 'hi-IN'; // Set language for Hindi
+            
+            voiceRecognition.onstart = () => {
+                isListening = true;
+                updateStatus('🎤 आवाज सुन रहा है... "बचाओ" कहें (3 बार)', 'listening');
+                voiceIndicator.classList.add('active');
+            };
+            
+            voiceRecognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+                interimTranscript = interimTranscript.toLowerCase().trim();
+                
+                // Update voice count if "बचाओ" or "bachao" is detected
+                if (interimTranscript.includes('बचाओ') || interimTranscript.includes('bachao')) {
+                    if (!emergencyTriggered) {
+                        voiceCount++;
+                        voiceCountSpan.textContent = voiceCount;
+                        
+                        // Visual feedback
+                        voiceIndicator.classList.add('active');
+                        setTimeout(() => voiceIndicator.classList.remove('active'), 500);
+                        
+                        // Vibration feedback
+                        if (isVibrationEnabled) {
+                            vibrate([100]);
+                        }
+                        
+                        if (voiceCount >= 3) {
+                            updateStatus('🚨 Emergency detected! Activating alert...', 'alert');
+                            triggerEmergency();
+                        } else {
+                            updateStatus(`🎤 Voice detected: "बचाओ" ${voiceCount}/3 times`, 'listening');
+                        }
+                    }
+                }
+            };
+            
+            voiceRecognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech' || event.error === 'not-allowed') {
+                    updateStatus('🚫 No speech detected or permission denied. Retrying...', 'warning');
+                } else {
+                    updateStatus('🔄 Voice recognition error. Restarting...', 'warning');
+                }
+                if (isListening && !emergencyTriggered) {
+                    setTimeout(startVoiceRecognition, 2000); // Retry after a delay
+                }
+            };
+            
+            voiceRecognition.onend = () => {
+                if (isListening && !emergencyTriggered) {
+                    // Restart if still supposed to be listening and not triggered
+                    console.log('Voice recognition ended, restarting...');
+                    setTimeout(startVoiceRecognition, 1000);
+                } else if (!isListening) {
+                    console.log('Voice recognition stopped manually.');
+                } else {
+                    console.log('Voice recognition ended after emergency.');
+                }
+            };
+            
+            try {
+                voiceRecognition.start();
+            } catch (e) {
+                console.error("Error starting speech recognition:", e);
+                updateStatus('❌ Failed to start voice recognition.', 'alert');
+            }
+        }
+
+        // Stop voice recognition
+        function stopVoiceRecognition() {
+            if (voiceRecognition) {
+                isListening = false;
+                voiceRecognition.stop();
+                voiceRecognition = null; // Clear the object
+                voiceIndicator.classList.remove('active');
+            }
+        }
+
+        // SOS Button Functions
+        function startSOSPress() {
+            if (emergencyTriggered) return;
+            
+            sosButton.classList.add('pressing');
+            
+            let progress = 0;
+            sosProgress.style.width = '0%';
+            sosButton.disabled = true; // Temporarily disable to prevent multiple timers
+            
+            sosTimer = setInterval(() => {
+                progress += 3.33; // 100% in 3 seconds
+                sosProgress.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(sosTimer);
+                    sosTimer = null;
+                    triggerEmergency();
+                }
+            }, 100);
+        }
+
+        function stopSOSPress() {
+            if (sosTimer) {
+                clearInterval(sosTimer);
+                sosTimer = null;
+            }
+            
+            sosButton.classList.remove('pressing');
+            sosProgress.style.width = '0%';
+            sosButton.disabled = false; // Re-enable button
+        }
+
+        // Silent Mode Functions
+        function startSilentMode() {
+            if (emergencyTriggered) return;
+            
+            silentArea.classList.add('active');
+            silentArea.textContent = 'Holded!'; // Feedback
+            silentArea.style.pointerEvents = 'none'; // Prevent multiple interactions
+
+            silentTimer = setTimeout(() => {
+                triggerEmergency();
+            }, 2000); // 2 seconds for silent mode
+        }
+
+        function stopSilentMode() {
+            if (silentTimer) {
+                clearTimeout(silentTimer);
+                silentTimer = null;
+            }
+            
+            silentArea.classList.remove('active');
+            silentArea.textContent = 'Hold for Silent Emergency'; // Reset text
+            silentArea.style.pointerEvents = 'auto'; // Re-enable interaction
+        }
+
+        // Start location sharing
+        function startLocationSharing() {
+            stopLocationSharing(); // Clear any existing interval
+            if (locationFrequency > 0) {
+                locationSharingInterval = setInterval(() => {
+                    shareLocationUpdate();
+                }, locationFrequency * 1000);
+                console.log(`Location sharing started every ${locationFrequency} seconds.`);
+                shareLocationUpdate(); // Perform an initial update immediately
+            } else {
+                console.log('Location sharing set to only once.');
+                shareLocationUpdate(); // Share location once if frequency is 0
+            }
+        }
+
+        // Stop location sharing
+        function stopLocationSharing() {
+            if (locationSharingInterval) {
+                clearInterval(locationSharingInterval);
+                locationSharingInterval = null;
+                console.log('Location sharing stopped.');
+            }
+        }
+
+        // Share location update
+        function shareLocationUpdate() {
+            getCurrentLocation().then(location => {
+                const message = `📍 Regular location update: ${location} | Battery: ${batteryLevel}%`;
+                console.log('Location update:', message);
+                
+                const now = new Date();
+                lastUpdateSpan.textContent = now.toLocaleTimeString();
+
+                // In a real app, you would send this via SMS or API
+                // Example: sendSMS(emergencyContacts.map(c => c.number).join(';'), message);
+
+            }).catch(error => {
+                console.error('Location sharing failed:', error);
+                lastUpdateSpan.textContent = 'Failed';
+            });
+        }
+
+        // Update location frequency display
+        function updateLocationFrequencyDisplay() {
+            const freqMap = {
+                60: 'Every 1 minute',
+                300: 'Every 5 minutes',
+                600: 'Every 10 minutes',
+                0: 'Only once'
+            };
+            currentFreqSpan.textContent = freqMap[locationFrequency] || 'Custom';
+        }
+
+        // Update status display
+        function updateStatus(message, type) {
+            statusDiv.innerHTML = `<p>${message}</p><p>Voice Recognition Count: <span id="voiceCount">${voiceCount}</span>/3</p>`;
+            statusDiv.className = `status ${type}`; // Apply appropriate class
+        }
+
+        // Trigger emergency
+        function triggerEmergency() {
+            if (emergencyTriggered) return; // Prevent multiple triggers
+            emergencyTriggered = true;
+            
+            stopVoiceRecognition();
+            stopLocationSharing();
+            
+            // Stop SOS timer if active
+            if (sosTimer) {
+                clearInterval(sosTimer);
+                sosTimer = null;
+            }
+            sosButton.disabled = true; // Keep disabled after trigger
+            sosButton.classList.remove('pressing');
+            sosProgress.style.width = '0%';
+            
+            // Stop Silent mode timer if active
+            if (silentTimer) {
+                clearTimeout(silentTimer);
+                silentTimer = null;
+            }
+            silentArea.classList.remove('active');
+            silentArea.style.pointerEvents = 'none';
+            
+            // Strong vibration
+            if (isVibrationEnabled) {
+                vibrate([500, 200, 500, 200, 500]);
+            }
+            
+            updateStatus('🚨 EMERGENCY TRIGGERED! Calling for help...', 'alert');
+            
+            // Get current location and then proceed
+            getCurrentLocation().then(location => {
+                makeEmergencyCalls(location);
+                sendLocationSMS(location);
+            }).catch(error => {
+                console.error("Error getting location for emergency:", error);
+                updateStatus('🚨 EMERGENCY TRIGGERED! Location unavailable. Attempting calls/SMS.', 'alert');
+                makeEmergencyCalls("Location unavailable");
+                sendLocationSMS("Location unavailable");
+            });
+
+            // Auto-reset after a period
+            setTimeout(resetEmergency, 90000); // Reset after 90 seconds
+        }
+
+        // Get current location
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    return reject('Geolocation not supported');
+                }
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const locationUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                        resolve(locationUrl);
+                    },
+                    error => reject(error),
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // Increased timeout and disable cache
+                );
+            });
+        }
+
+        // Make emergency calls to all contacts
+        function makeEmergencyCalls(location) {
+            const message = `🚨 EMERGENCY ALERT! I need immediate help. My location: ${location} | Battery: ${batteryLevel}% | Time: ${new Date().toLocaleString()}`;
+            
+            emergencyContacts.forEach((contact, index) => {
+                setTimeout(() => {
+                    // Simulate making a call - this only opens the dialer
+                    window.open(`tel:${contact.number}`, '_blank');
+                    console.log(`Attempting call to ${contact.name} (${contact.number})`);
+                }, index * 1500); // Stagger calls by 1.5 seconds
+            });
+            updateStatus(`📞 Initiated calls to ${emergencyContacts.length} contacts.`, 'success');
+        }
+
+        // Send location SMS to all contacts
+        function sendLocationSMS(location) {
+            const message = `🚨 EMERGENCY ALERT! I need immediate help. My location: ${location} | Battery: ${batteryLevel}% | Time: ${new Date().toLocaleString()}`;
+            
+            emergencyContacts.forEach((contact, index) => {
+                setTimeout(() => {
+                    // Simulate sending SMS - this only opens the SMS composer
+                    window.open(`sms:${contact.number}?body=${encodeURIComponent(message)}`, '_blank');
+                    console.log(`Attempting SMS to ${contact.name} (${contact.number})`);
+                }, (index + 1) * 2000); // Stagger SMS by 2 seconds
+            });
+            updateStatus(`📱 Sent emergency SMS to ${emergencyContacts.length} contacts.`, 'success');
+        }
+
+        // Test emergency function
+        function testEmergency() {
+            if (confirm('Are you sure you want to test emergency mode? This will call/message your emergency contacts.')) {
+                voiceCount = 3; // Simulate voice detection
+                triggerEmergency();
+            }
+        }
+
+        // Test vibration
+        function testVibration() {
+            if (isVibrationEnabled) {
+                vibrate([200, 100, 200]);
+                const tempStatusDiv = document.createElement('div');
+                tempStatusDiv.className = 'vibration-test';
+                tempStatusDiv.textContent = '📳 Testing Vibration...';
+                
+                // Temporarily replace status content
+                const originalStatusHTML = statusDiv.innerHTML;
+                statusDiv.innerHTML = tempStatusDiv.outerHTML;
+                statusDiv.className = 'status alert'; // Style for test
+
+                setTimeout(() => {
+                    statusDiv.innerHTML = originalStatusHTML; // Restore original status
+                    // Re-apply current status type if needed
+                    const currentStatusType = statusDiv.classList.contains('listening') ? 'listening' :
+                                              statusDiv.classList.contains('alert') ? 'alert' :
+                                              statusDiv.classList.contains('success') ? 'success' :
+                                              'warning';
+                    statusDiv.className = `status ${currentStatusType}`;
+                }, 1500);
+            } else {
+                alert('Vibration alerts are disabled in settings.');
+            }
+        }
+
+        // Reset emergency state
+        function resetEmergency() {
+            emergencyTriggered = false;
+            voiceCount = 0;
+            updateStatus('👍 Safety mode reset. Ready to protect.', 'listening');
+            startVoiceRecognition(); // Restart listening
+            startLocationSharing(); // Restart location sharing if applicable
+        }
+
+        // Vibration function
+        function vibrate(pattern) {
+            if (!('vibrate' in navigator) || !isVibrationEnabled) {
+                console.log("Vibration not supported or disabled.");
+                return;
+            }
+            navigator.vibrate(pattern);
+        }
+
+        // Helper to update settings display from main screen
+        function updateSettingsDisplay() {
+            backgroundModeToggle.checked = isBackgroundMode;
+            vibrationModeToggle.checked = isVibrationEnabled;
+        }
+
+        // --- Event Listeners for Toggles ---
+        backgroundModeToggle.addEventListener('change', () => {
+            isBackgroundMode = backgroundModeToggle.checked;
+            console.log("Background Mode:", isBackgroundMode);
+            // Actual background mode implementation would require Service Workers
+        });
+
+        vibrationModeToggle.addEventListener('change', () => {
+            isVibrationEnabled = vibrationModeToggle.checked;
+            console.log("Vibration Alerts:", isVibrationEnabled);
+        });
+
+    </script>
+</body>
+</html>
