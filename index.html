@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Emergency Safety App</title>
+    <title>Emergency Safety App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,1231 +20,1031 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
-            color: #333; /* Default text color */
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
-            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* Enhanced shadow */
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        /* Screen visibility */
-        .screen {
-            display: none;
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
         }
-        .screen.active {
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .setup-form {
             display: block;
         }
 
-        .logo {
-            font-size: 60px;
-            margin-bottom: 20px;
-            color: #e74c3c;
-            text-shadow: 0 5px 15px rgba(231, 76, 60, 0.3); /* Text shadow for logo */
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 26px;
-            font-weight: 700;
-        }
-
-        p {
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .hindi-text {
-            font-size: 14px;
-            color: #6c757d;
-            margin-top: -5px; /* Adjust spacing */
-            margin-bottom: 15px;
+        .main-app {
+            display: none;
         }
 
         .input-group {
             margin-bottom: 20px;
-            text-align: left;
         }
 
-        label {
+        .input-group label {
             display: block;
             margin-bottom: 8px;
-            color: #34495e;
             font-weight: bold;
-            font-size: 15px;
+            color: #333;
         }
 
-        input[type="text"], input[type="tel"], select {
+        .input-group input {
             width: 100%;
-            padding: 12px 15px; /* Slightly more padding */
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background-color: #f9f9f9; /* Light background for inputs */
+            transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus, input[type="tel"]:focus, select:focus {
+        .input-group input:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Focus glow */
+            border-color: #667eea;
         }
 
         .btn {
-            background: linear-gradient(45deg, #3498db, #2ecc71);
-            color: white;
-            padding: 12px 30px;
+            width: 100%;
+            padding: 15px;
             border: none;
-            border-radius: 25px; /* More rounded buttons */
+            border-radius: 10px;
             font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin: 10px 5px;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); /* Button shadow */
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
         }
 
-        .btn:hover {
-            transform: translateY(-3px); /* Lift effect on hover */
-            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
         }
 
         .btn-danger {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 18px;
+            padding: 20px;
         }
 
         .btn-danger:hover {
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255,107,107,0.3);
         }
 
-        .btn-sos {
-            background: linear-gradient(45deg, #ff4757, #ff3838);
-            font-size: 24px;
-            padding: 20px;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4); /* SOS button shadow */
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            border: 5px solid white;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
         }
 
-        .btn-sos:hover {
-            transform: translateY(-3px) scale(1.05); /* More pronounced hover */
-            box-shadow: 0 15px 40px rgba(255, 71, 87, 0.5);
+        .status.listening {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #4caf50;
         }
 
-        .btn-sos:active {
-            transform: scale(0.95);
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        .status.emergency {
+            background: #ffebee;
+            color: #c62828;
+            border: 2px solid #f44336;
+            animation: pulse 1s infinite;
         }
 
-        .btn-sos.pressing {
-            animation: sosPress 0.1s infinite;
-            background: linear-gradient(45deg, #ff6b7a, #ff5252);
-        }
-
-        @keyframes sosPress {
+        @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
 
-        .sos-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0%;
-            height: 8px;
-            background: white;
-            transition: width 0.1s linear;
-            border-radius: 0 0 5px 5px; /* Rounded bottom corners */
-        }
-
-        /* Status Div */
-        .status {
-            padding: 15px 20px;
-            border-radius: 10px;
+        .contact-list {
             margin-top: 20px;
-            font-weight: bold;
-            text-align: left;
-            border: 1px solid transparent;
+        }
+
+        .contact-item {
             display: flex;
-            flex-direction: column;
-            gap: 5px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); /* Inner shadow for depth */
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
 
-        .status.listening {
-            background: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
+        .contact-info {
+            flex: 1;
         }
 
-        .status.alert {
-            background: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
+        .contact-name {
+            font-weight: bold;
+            color: #333;
         }
 
-        .status.success {
-            background: #d1ecf1; /* Light blue for success */
-            color: #0c5460;
-            border-color: #bee5eb;
+        .contact-number {
+            color: #666;
+            font-size: 0.9rem;
         }
 
-        .status.warning {
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 5px;
+        }
+
+        .location-status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background: #e3f2fd;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .emergency-log {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #ff6b6b;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .voice-indicator {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .voice-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            transition: all 0.3s;
+        }
+
+        .voice-circle.listening {
+            animation: listening 2s infinite;
+        }
+
+        @keyframes listening {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 1px solid transparent;
+        }
+
+        .alert-warning {
             background: #fff3cd;
             color: #856404;
             border-color: #ffeaa7;
         }
 
-        /* Voice Indicator */
-        .voice-indicator {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #3498db;
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); /* Pulse effect */
-            transition: background 0.3s, transform 0.3s;
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
         }
 
-        .voice-indicator.active {
-            background: #e74c3c;
-            animation: fastPulse 0.5s infinite;
-            box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(52, 152, 219, 0.4); }
-            100% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0.3); }
-        }
-
-        @keyframes fastPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5); }
-            50% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(231, 76, 60, 0.6); }
-            100% { transform: scale(1); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0.5); }
-        }
-
-        /* Emergency Info Section */
-        .emergency-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(255, 243, 205, 0.5); /* Info box shadow */
-        }
-        .emergency-info h3 {
-            margin-top: 0;
-            color: #856404;
-            font-size: 18px;
-        }
-        .emergency-info p {
-            margin-bottom: 5px;
-        }
-
-        /* Contact Info Section */
-        .contact-info {
+        .qr-section {
+            margin: 20px 0;
+            padding: 20px;
             background: #f8f9fa;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .contact-info h3 {
-            margin-top: 0;
-            color: #343a40;
-            font-size: 18px;
-            margin-bottom: 15px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
         }
 
-        .contacts-list {
-            margin-top: 15px;
-            max-height: 150px; /* Limit height for scrolling */
-            overflow-y: auto; /* Enable scrolling */
-            padding-right: 10px; /* Space for scrollbar */
-        }
-        .contacts-list::-webkit-scrollbar { /* Style scrollbar */
-            width: 6px;
-        }
-        .contacts-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-        .contacts-list::-webkit-scrollbar-thumb {
-            background: #aaa;
-            border-radius: 3px;
-        }
-        .contacts-list::-webkit-scrollbar-thumb:hover {
-            background: #888;
-        }
-
-        .contact-item {
+        .qr-code-display {
+            text-align: center;
+            padding: 20px;
             background: white;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .contact-item strong {
-            color: #495057;
-        }
-        .contact-item span {
-            color: #6c757d;
-            margin-left: 5px;
-        }
-
-        .add-contact-btn {
-            background: #28a745;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s;
-            box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
-        }
-        .add-contact-btn:hover {
-            background: #218838;
-        }
-
-        .remove-contact-btn {
-            background: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-left: 10px; /* Space from number */
-        }
-        .remove-contact-btn:hover {
-            background: #c82333;
-        }
-
-        /* Battery Info */
-        .battery-info {
-            background: #e9ecef;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 14px;
-            text-align: left;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .battery-info span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Location Sharing */
-        .location-sharing {
-            background: #d1ecf1;
-            padding: 15px 20px;
             border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            box-shadow: 0 2px 8px rgba(209, 236, 241, 0.6);
-        }
-        .location-sharing h3 {
-            margin-top: 0;
-            color: #0c5460;
-            font-size: 18px;
-        }
-        .location-sharing p {
-            margin-bottom: 5px;
-            font-size: 14px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        /* Silent Mode */
-        .silent-mode {
-            background: #f8d7da;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            box-shadow: 0 2px 8px rgba(248, 215, 218, 0.5);
-        }
-        .silent-mode h3 {
-            margin-top: 0;
-            color: #721c24;
-            font-size: 18px;
-        }
-        .silent-area {
-            width: 100%;
-            height: 80px;
-            background: #6c757d;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            margin-top: 10px;
-            transition: background 0.3s, transform 0.3s;
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
-        }
-        .silent-area.active {
-            background: #e74c3c;
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
-            transform: scale(1.02);
-        }
-        .silent-area:active {
-            transform: scale(0.98);
-        }
-
-        /* Settings Section */
-        .settings-section {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .settings-section h3 {
-            margin-top: 0;
-            color: #343a40;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        .settings-section div {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .settings-section span {
-            font-size: 15px;
-            color: #34495e;
-        }
-
-        /* Toggle Switch */
-        .toggle-switch {
+        .qr-scanner {
             position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
         }
 
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .qr-scanner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .slider {
+        .scanner-overlay {
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .scanner-overlay::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 2px solid #ff6b6b;
+            border-radius: 10px;
+            animation: scan-border 2s infinite;
+        }
+
+        @keyframes scan-border {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connected-apps {
+            margin-top: 20px;
+        }
+
+        .connected-app {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .app-info {
+            flex: 1;
+        }
+
+        .app-name {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .app-id {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .connection-status {
+            color: #4caf50;
+            font-size: 0.8rem;
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76,175,80,0.3);
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f1f1f1;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f1f1f1;
+            border: none;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
+            transition: all 0.3s;
+            font-weight: bold;
         }
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+        .tab.active {
+            background: #667eea;
+            color: white;
         }
 
-        input:checked + .slider {
-            background-color: #2196F3; /* Blue when checked */
+        .tab-content {
+            display: none;
         }
 
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        .tab-content.active {
+            display: block;
         }
 
-        /* Vibration Test Animation */
-        .vibration-test {
-            color: #e74c3c;
-            font-size: 30px;
-            animation: shake 0.5s;
-            display: inline-block; /* Needed for transform */
+        .my-qr-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
         }
 
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px) rotate(-2deg); }
-            50% { transform: translateX(5px) rotate(2deg); }
-            75% { transform: translateX(-5px) rotate(-2deg); }
-            100% { transform: translateX(0); }
+        .app-id-display {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Setup Screen -->
-        <div class="screen setup-screen active" id="setupScreen">
-            <div class="logo">🚨</div>
-            <h1>Advanced Emergency Safety App</h1>
-            <p class="hindi-text">उन्नत आपातकालीन सुरक्षा ऐप</p>
-            
-            <div class="input-group">
-                <label for="contactName">Emergency Contact Name / संपर्क व्यक्ति का नाम:</label>
-                <input type="text" id="contactName" placeholder="जैसे: मम्मी, पापा, भाई" required>
-            </div>
-            
-            <div class="input-group">
-                <label for="contactNumber">Emergency Contact Number / मोबाइल नंबर:</label>
-                <input type="tel" id="contactNumber" placeholder="+91-9876543210" required>
-            </div>
-            
-            <button class="btn add-contact-btn" onclick="addContact()">Add Contact / संपर्क जोड़ें</button>
-            
-            <div class="contact-info" style="margin-top: 15px;">
-                <h3>Added Contacts / जोड़े गए संपर्क:</h3>
-                <div class="contacts-list" id="contactsContainer"></div>
-            </div>
-            
-            <div class="input-group">
-                <label for="locationFreq">Location Sharing Frequency / स्थान साझाकरण आवृत्ति:</label>
-                <select id="locationFreq">
-                    <option value="60">Every 1 minute / हर 1 मिनट</option>
-                    <option value="300">Every 5 minutes / हर 5 मिनट</option>
-                    <option value="600">Every 10 minutes / हर 10 मिनट</option>
-                    <option value="0">Only once / केवल एक बार</option>
-                </select>
-            </div>
-            
-            <div class="emergency-info">
-                <h3>📱 कैसे काम करता है:</h3>
-                <p>• "बचाओ" शब्द को 3 बार कहें</p>
-                <p>• SOS बटन को 3 सेकंड दबाकर रखें</p>
-                <p>• Silent mode में hold करें</p>
-                <p>• Automatic call और location SMS भेजा जाएगा</p>
-            </div>
-            
-            <button class="btn" onclick="saveSettings()">Save Settings / सेटिंग्स सेव करें</button>
+        <div class="header">
+            <h1>🚨 Emergency Safety App</h1>
+            <p>आपकी सुरक्षा हमारी प्राथमिकता</p>
         </div>
 
-        <!-- Main Screen -->
-        <div class="screen main-screen" id="mainScreen">
-            <div class="logo">🔒</div>
-            <h1>Safety Mode Active</h1>
-            <p class="hindi-text">सुरक्षा मोड सक्रिय है</p>
-            
-            <div class="voice-indicator" id="voiceIndicator">🎤</div>
-            
-            <div class="contact-info" id="contactInfo">
-                <h3>Emergency Contacts:</h3>
-                <div class="contacts-list" id="savedContacts"></div>
+        <div class="content">
+            <!-- Setup Form -->
+            <div class="setup-form" id="setupForm">
+                <h2 style="margin-bottom: 20px; text-align: center;">प्रारंभिक सेटअप</h2>
+                
+                <div class="alert alert-warning">
+                    <strong>महत्वपूर्ण:</strong> कृपया अपने विश्वसनीय संपर्कों का नंबर जोड़ें। आपातकाल में यह ऐप इन्हें automatic call और SMS भेजेगा।
+                </div>
+
+                <div class="input-group">
+                    <label>संपर्क का नाम:</label>
+                    <input type="text" id="contactName" placeholder="जैसे: राम, श्याम">
+                </div>
+
+                <div class="input-group">
+                    <label>मोबाइल नंबर:</label>
+                    <input type="tel" id="contactNumber" placeholder="9876543210">
+                </div>
+
+                <button class="btn btn-primary" onclick="addContact()">संपर्क जोड़ें</button>
+
+                <div class="contact-list" id="contactList"></div>
+
+                <button class="btn btn-primary" onclick="startApp()" id="startBtn" style="display: none;">ऐप शुरू करें</button>
             </div>
-            
-            <div class="battery-info" id="batteryInfo">
-                <span id="batteryLevel">🔋 Battery: Checking...</span>
-            </div>
-            
-            <div class="status listening" id="statusDiv">
-                <p>🎤 आवाज सुन रहा है... "बचाओ" कहें (3 बार)</p>
-                <p>Voice Recognition Count: <span id="voiceCount">0</span>/3</p>
-            </div>
-            
-            <!-- SOS Button -->
-            <div style="margin: 30px 0;">
-                <button class="btn-sos" id="sosButton" 
-                        onmousedown="startSOSPress()" 
-                        onmouseup="stopSOSPress()" 
-                        onmouseleave="stopSOSPress()"
-                        ontouchstart="startSOSPress()" 
-                        ontouchend="stopSOSPress()">
-                    🆘 SOS
-                    <div class="sos-progress" id="sosProgress"></div>
+
+            <!-- Main App -->
+            <div class="main-app" id="mainApp">
+                <div class="voice-indicator">
+                    <div class="voice-circle" id="voiceCircle">🎤</div>
+                    <p><strong>बोलिए "बचाओ बचाओ" तीन बार</strong></p>
+                </div>
+
+                <div class="status" id="status">
+                    सुनने की स्थिति: तैयार
+                </div>
+
+                <div class="location-status" id="locationStatus">
+                    📍 स्थान प्राप्त की जा रही है...
+                </div>
+
+                <button class="btn btn-danger" onclick="triggerEmergency()">
+                    🚨 आपातकालीन बटन
                 </button>
-                <p class="hindi-text">3 सेकंड तक दबाकर रखें</p>
-            </div>
-            
-            <!-- Silent Mode -->
-            <div class="silent-mode">
-                <h3>🤫 Silent Emergency Mode</h3>
-                <div class="silent-area" id="silentArea" 
-                     onmousedown="startSilentMode()" 
-                     onmouseup="stopSilentMode()"
-                     ontouchstart="startSilentMode()" 
-                     ontouchend="stopSilentMode()">
-                    Hold for Silent Emergency
+
+                <button class="btn btn-primary" onclick="showSettings()">
+                    ⚙️ सेटिंग्स
+                </button>
+
+                <div class="qr-section">
+                    <div class="tab-container">
+                        <button class="tab active" onclick="showTab('myQR')">मेरा QR</button>
+                        <button class="tab" onclick="showTab('scanQR')">QR Scan</button>
+                        <button class="tab" onclick="showTab('connections')">Connections</button>
+                    </div>
+
+                    <div id="myQR" class="tab-content active">
+                        <div class="my-qr-info">
+                            <h3>🔗 मेरा App QR Code</h3>
+                            <div class="app-id-display" id="myAppId"></div>
+                            <p>इस QR code को दूसरे app में scan करें</p>
+                        </div>
+                        <div class="qr-code-display" id="qrCodeDisplay"></div>
+                        <button class="btn btn-primary" onclick="generateQRCode()">
+                            🔄 नया QR Code Generate करें
+                        </button>
+                    </div>
+
+                    <div id="scanQR" class="tab-content">
+                        <h3>📱 दूसरे App को Connect करें</h3>
+                        <div class="qr-scanner" id="qrScanner" style="display: none;">
+                            <video id="qrVideo"></video>
+                            <div class="scanner-overlay"></div>
+                        </div>
+                        <button class="btn btn-scan" onclick="startQRScanner()">
+                            📷 QR Scanner शुरू करें
+                        </button>
+                        <button class="btn btn-danger" onclick="stopQRScanner()" style="display: none;" id="stopScanBtn">
+                            ⏹️ Scanner बंद करें
+                        </button>
+                    </div>
+
+                    <div id="connections" class="tab-content">
+                        <h3>🔗 Connected Apps</h3>
+                        <div class="connected-apps" id="connectedApps"></div>
+                        <div id="noConnections" style="text-align: center; padding: 20px; color: #666;">
+                            कोई connected app नहीं मिला
+                        </div>
+                    </div>
                 </div>
-                <p class="hindi-text">चुप रहकर आपातकाल के लिए दबाएं</p>
+
+                <div class="emergency-log" id="emergencyLog"></div>
             </div>
-            
-            <!-- Settings -->
-            <div class="settings-section">
-                <h3>⚙️ Settings</h3>
-                <div style="margin: 10px 0;">
-                    <label for="backgroundMode">Background Mode / बैकग्राउंड मोड:</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="backgroundMode">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div style="margin: 10px 0;">
-                    <label for="vibrationMode">Vibration Alerts / कंपन अलर्ट:</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="vibrationMode" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="location-sharing" id="locationSharing">
-                <h3>📍 Location Sharing Active</h3>
-                <p>Frequency: <span id="currentFreq">Every 1 minute</span></p>
-                <p>Last Update: <span id="lastUpdate">Never</span></p>
-            </div>
-            
-            <button class="btn btn-danger" onclick="testEmergency()">Test Emergency / आपातकाल टेस्ट करें</button>
-            <button class="btn" onclick="showSetupScreen()">Edit Contacts / संपर्क बदलें</button>
-            <button class="btn" onclick="testVibration()">Test Vibration / कंपन टेस्ट करें</button>
         </div>
     </div>
 
     <script>
-        let emergencyContacts = [];
-        let locationFrequency = 60; // seconds
-        let voiceRecognition = null;
-        let voiceCount = 0;
+        let contacts = [];
+        let currentLocation = null;
         let isListening = false;
-        let emergencyTriggered = false;
-        let sosTimer = null;
-        let silentTimer = null;
-        let locationSharingInterval = null;
-        let batteryLevel = 100;
-        let isBackgroundMode = false;
-        let isVibrationEnabled = true;
+        let bachaoCount = 0;
+        let lastBachaoTime = 0;
+        let recognition;
+        let emergencyLogs = [];
+        let connectedApps = [];
+        let myAppId = '';
+        let qrScanner = null;
+        let isScanning = false;
 
-        // DOM Elements
-        const setupScreen = document.getElementById('setupScreen');
-        const mainScreen = document.getElementById('mainScreen');
-        const sosButton = document.getElementById('sosButton');
-        const sosProgress = document.getElementById('sosProgress');
-        const silentArea = document.getElementById('silentArea');
-        const statusDiv = document.getElementById('statusDiv');
-        const voiceIndicator = document.getElementById('voiceIndicator');
-        const voiceCountSpan = document.getElementById('voiceCount');
-        const savedContactsDiv = document.getElementById('savedContacts');
-        const contactsContainer = document.getElementById('contactsContainer');
-        const contactNameInput = document.getElementById('contactName');
-        const contactNumberInput = document.getElementById('contactNumber');
-        const locationFreqSelect = document.getElementById('locationFreq');
-        const backgroundModeToggle = document.getElementById('backgroundMode');
-        const vibrationModeToggle = document.getElementById('vibrationMode');
-        const batteryLevelSpan = document.getElementById('batteryLevel');
-        const currentFreqSpan = document.getElementById('currentFreq');
-        const lastUpdateSpan = document.getElementById('lastUpdate');
+        // Initialize the app
+        function init() {
+            requestLocationPermission();
+            setupSpeechRecognition();
+            loadContacts();
+            generateMyAppId();
+            generateQRCode();
+            updateConnectedApps();
+        }
 
-
-        // Initialize app
-        window.onload = () => {
-            checkBattery();
-            requestPermissions();
-            loadSettings();
-            updateContactsList(); // Ensure list is updated even if no settings loaded
-        };
-
-        // Request necessary permissions
-        function requestPermissions() {
-            if (navigator.permissions) {
-                navigator.permissions.query({name: 'microphone'}).then(function(result) {
-                    if (result.state !== 'granted') {
-                        // Optionally prompt for permission here if not granted
-                        console.log('Microphone permission not granted.');
+        // Request location permission
+        function requestLocationPermission() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        updateLocationStatus();
+                    },
+                    (error) => {
+                        document.getElementById('locationStatus').innerHTML = 
+                            '📍 स्थान की अनुमति नहीं मिली';
                     }
-                });
-                navigator.geolocation.getCurrentPosition(() => {}, (error) => {
-                    if (error.code === error.PERMISSION_DENIED) {
-                        alert('कृपया स्थान की अनुमति दें / Please allow location access for the app to function correctly.');
-                    }
-                });
+                );
             }
         }
 
-        // Check battery level
-        function checkBattery() {
-            if ('getBattery' in navigator) {
-                navigator.getBattery().then(function(battery) {
-                    updateBatteryDisplay(battery.level * 100);
-                    battery.addEventListener('levelchange', () => updateBatteryDisplay(battery.level * 100));
-                }).catch(err => {
-                    console.error("Battery API not available:", err);
-                    batteryLevelSpan.textContent = '🔋 Battery: N/A';
-                });
+        // Update location status
+        function updateLocationStatus() {
+            if (currentLocation) {
+                document.getElementById('locationStatus').innerHTML = 
+                    `📍 स्थान: ${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`;
+            }
+        }
+
+        // Setup speech recognition
+        function setupSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'hi-IN';
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    document.getElementById('status').textContent = 'सुन रहा हूँ...';
+                    document.getElementById('status').className = 'status listening';
+                    document.getElementById('voiceCircle').classList.add('listening');
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    
+                    checkForBachao(transcript.toLowerCase());
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    restartListening();
+                };
+
+                recognition.onend = () => {
+                    if (isListening) {
+                        restartListening();
+                    }
+                };
+
+                startListening();
             } else {
-                batteryLevelSpan.textContent = '🔋 Battery: N/A';
+                document.getElementById('status').textContent = 'आपका ब्राउज़र voice recognition support नहीं करता';
             }
         }
 
-        // Update battery display
-        function updateBatteryDisplay(level) {
-            batteryLevel = Math.round(level);
-            let batteryIcon = '🔋';
-            if (batteryLevel < 20) batteryIcon = '🪫';
-            batteryLevelSpan.textContent = `${batteryIcon} Battery: ${batteryLevel}%`;
+        // Start listening
+        function startListening() {
+            if (recognition) {
+                recognition.start();
+            }
         }
 
-        // Add contact function
-        function addContact() {
-            const name = contactNameInput.value.trim();
-            const number = contactNumberInput.value.trim();
-            
-            if (name === '' || number === '') {
-                alert('कृपया नाम और नंबर दोनों भरें / Please fill both name and number');
-                return;
-            }
-            
-            // Basic phone number validation (can be improved)
-            if (!/^\+?[0-9-]+$/.test(number)) {
-                 alert('कृपया एक वैध मोबाइल नंबर दर्ज करें / Please enter a valid mobile number.');
-                 return;
-            }
-
-            if (emergencyContacts.length >= 5) {
-                alert('अधिकतम 5 संपर्क जोड़े जा सकते हैं / Maximum 5 contacts can be added');
-                return;
-            }
-            
-            emergencyContacts.push({name, number});
-            updateContactsList();
-            
-            // Clear input fields
-            contactNameInput.value = '';
-            contactNumberInput.value = '';
+        // Restart listening
+        function restartListening() {
+            setTimeout(() => {
+                if (isListening) {
+                    recognition.start();
+                }
+            }, 1000);
         }
 
-        // Update contacts list display
-        function updateContactsList() {
-            contactsContainer.innerHTML = '';
+        // Check for "bachao" words
+        function checkForBachao(text) {
+            const now = Date.now();
+            const bachaoWords = ['बचाओ', 'bachao', 'बचाव', 'bachav', 'help', 'हेल्प'];
             
-            if (emergencyContacts.length === 0) {
-                contactsContainer.innerHTML = '<p style="color: #6c757d;">No contacts added yet. / अभी तक कोई संपर्क नहीं जोड़ा गया है।</p>';
-                return;
-            }
-
-            emergencyContacts.forEach((contact, index) => {
-                const contactDiv = document.createElement('div');
-                contactDiv.className = 'contact-item';
-                contactDiv.innerHTML = `
-                    <div>
-                        <strong>${contact.name}</strong><br>
-                        <span>📞 ${contact.number}</span>
-                    </div>
-                    <button class="remove-contact-btn" onclick="removeContact(${index})">Remove</button>
-                `;
-                contactsContainer.appendChild(contactDiv);
+            let foundBachao = false;
+            bachaoWords.forEach(word => {
+                if (text.includes(word)) {
+                    foundBachao = true;
+                }
             });
-        }
 
-        // Remove contact function
-        function removeContact(index) {
-            if (confirm('Are you sure you want to remove this contact?')) {
-                emergencyContacts.splice(index, 1);
-                updateContactsList();
-            }
-        }
-
-        // Save settings and transition to main screen
-        function saveSettings() {
-            if (emergencyContacts.length === 0) {
-                alert('कम से कम एक संपर्क जोड़ें / Please add at least one contact');
-                return;
-            }
-            
-            locationFrequency = parseInt(locationFreqSelect.value);
-            isBackgroundMode = backgroundModeToggle.checked;
-            isVibrationEnabled = vibrationModeToggle.checked;
-
-            localStorage.setItem('emergencyAppContacts', JSON.stringify(emergencyContacts));
-            localStorage.setItem('emergencyAppLocationFreq', locationFrequency);
-            localStorage.setItem('emergencyAppBackgroundMode', isBackgroundMode);
-            localStorage.setItem('emergencyAppVibrationMode', isVibrationEnabled);
-            
-            updateMainScreenContactsDisplay();
-            updateLocationFrequencyDisplay();
-            
-            setupScreen.classList.remove('active');
-            mainScreen.classList.add('active');
-            
-            startVoiceRecognition();
-            startLocationSharing();
-        }
-
-        // Load settings from localStorage
-        function loadSettings() {
-            const savedContacts = localStorage.getItem('emergencyAppContacts');
-            const savedFreq = localStorage.getItem('emergencyAppLocationFreq');
-            const savedBgMode = localStorage.getItem('emergencyAppBackgroundMode');
-            const savedVibMode = localStorage.getItem('emergencyAppVibrationMode');
-
-            if (savedContacts) {
-                emergencyContacts = JSON.parse(savedContacts);
-                updateContactsList();
-            }
-            if (savedFreq !== null) {
-                locationFrequency = parseInt(savedFreq);
-                locationFreqSelect.value = locationFrequency;
-            }
-            if (savedBgMode !== null) {
-                isBackgroundMode = (savedBgMode === 'true');
-                backgroundModeToggle.checked = isBackgroundMode;
-            }
-            if (savedVibMode !== null) {
-                isVibrationEnabled = (savedVibMode === 'true');
-                vibrationModeToggle.checked = isVibrationEnabled;
-            }
-        }
-
-        // Show setup screen for editing
-        function showSetupScreen() {
-            stopVoiceRecognition();
-            stopLocationSharing();
-            mainScreen.classList.remove('active');
-            setupScreen.classList.add('active');
-            updateStatus('Settings screen opened. Save to re-activate safety mode.', 'warning');
-        }
-
-        // Update main screen contacts display
-        function updateMainScreenContactsDisplay() {
-            savedContactsDiv.innerHTML = '';
-            emergencyContacts.forEach(contact => {
-                const contactDiv = document.createElement('div');
-                contactDiv.className = 'contact-item';
-                contactDiv.innerHTML = `
-                    <div>
-                        <strong>${contact.name}</strong><br>
-                        <span>📞 ${contact.number}</span>
-                    </div>
-                `;
-                savedContactsDiv.appendChild(contactDiv);
-            });
-             if (emergencyContacts.length === 0) {
-                savedContactsDiv.innerHTML = '<p style="color: #6c757d;">No contacts saved. / कोई संपर्क सहेजा नहीं गया है।</p>';
-            }
-        }
-
-        // Start voice recognition
-        function startVoiceRecognition() {
-            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-                updateStatus('⚠️ Voice recognition not supported in this browser.', 'alert');
-                return;
-            }
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            voiceRecognition = new SpeechRecognition();
-            
-            voiceRecognition.continuous = true;
-            voiceRecognition.interimResults = true;
-            voiceRecognition.lang = 'hi-IN'; // Set language for Hindi
-            
-            voiceRecognition.onstart = () => {
-                isListening = true;
-                updateStatus('🎤 आवाज सुन रहा है... "बचाओ" कहें (3 बार)', 'listening');
-                voiceIndicator.classList.add('active');
-            };
-            
-            voiceRecognition.onresult = (event) => {
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    interimTranscript += event.results[i][0].transcript;
-                }
-                interimTranscript = interimTranscript.toLowerCase().trim();
-                
-                // Update voice count if "बचाओ" or "bachao" is detected
-                if (interimTranscript.includes('बचाओ') || interimTranscript.includes('bachao')) {
-                    if (!emergencyTriggered) {
-                        voiceCount++;
-                        voiceCountSpan.textContent = voiceCount;
-                        
-                        // Visual feedback
-                        voiceIndicator.classList.add('active');
-                        setTimeout(() => voiceIndicator.classList.remove('active'), 500);
-                        
-                        // Vibration feedback
-                        if (isVibrationEnabled) {
-                            vibrate([100]);
-                        }
-                        
-                        if (voiceCount >= 3) {
-                            updateStatus('🚨 Emergency detected! Activating alert...', 'alert');
-                            triggerEmergency();
-                        } else {
-                            updateStatus(`🎤 Voice detected: "बचाओ" ${voiceCount}/3 times`, 'listening');
-                        }
-                    }
-                }
-            };
-            
-            voiceRecognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                if (event.error === 'no-speech' || event.error === 'not-allowed') {
-                    updateStatus('🚫 No speech detected or permission denied. Retrying...', 'warning');
+            if (foundBachao) {
+                if (now - lastBachaoTime < 5000) { // 5 seconds window
+                    bachaoCount++;
                 } else {
-                    updateStatus('🔄 Voice recognition error. Restarting...', 'warning');
+                    bachaoCount = 1;
                 }
-                if (isListening && !emergencyTriggered) {
-                    setTimeout(startVoiceRecognition, 2000); // Retry after a delay
-                }
-            };
-            
-            voiceRecognition.onend = () => {
-                if (isListening && !emergencyTriggered) {
-                    // Restart if still supposed to be listening and not triggered
-                    console.log('Voice recognition ended, restarting...');
-                    setTimeout(startVoiceRecognition, 1000);
-                } else if (!isListening) {
-                    console.log('Voice recognition stopped manually.');
-                } else {
-                    console.log('Voice recognition ended after emergency.');
-                }
-            };
-            
-            try {
-                voiceRecognition.start();
-            } catch (e) {
-                console.error("Error starting speech recognition:", e);
-                updateStatus('❌ Failed to start voice recognition.', 'alert');
-            }
-        }
-
-        // Stop voice recognition
-        function stopVoiceRecognition() {
-            if (voiceRecognition) {
-                isListening = false;
-                voiceRecognition.stop();
-                voiceRecognition = null; // Clear the object
-                voiceIndicator.classList.remove('active');
-            }
-        }
-
-        // SOS Button Functions
-        function startSOSPress() {
-            if (emergencyTriggered) return;
-            
-            sosButton.classList.add('pressing');
-            
-            let progress = 0;
-            sosProgress.style.width = '0%';
-            sosButton.disabled = true; // Temporarily disable to prevent multiple timers
-            
-            sosTimer = setInterval(() => {
-                progress += 3.33; // 100% in 3 seconds
-                sosProgress.style.width = progress + '%';
                 
-                if (progress >= 100) {
-                    clearInterval(sosTimer);
-                    sosTimer = null;
+                lastBachaoTime = now;
+                
+                document.getElementById('status').textContent = 
+                    `"बचाओ" सुना गया (${bachaoCount}/3)`;
+                
+                if (bachaoCount >= 3) {
                     triggerEmergency();
+                    bachaoCount = 0;
                 }
-            }, 100);
+            }
         }
 
-        function stopSOSPress() {
-            if (sosTimer) {
-                clearInterval(sosTimer);
-                sosTimer = null;
-            }
+        // Add contact
+        function addContact() {
+            const name = document.getElementById('contactName').value.trim();
+            const number = document.getElementById('contactNumber').value.trim();
             
-            sosButton.classList.remove('pressing');
-            sosProgress.style.width = '0%';
-            sosButton.disabled = false; // Re-enable button
-        }
+            if (!name || !number) {
+                alert('कृपया नाम और नंबर दोनों भरें');
+                return;
+            }
 
-        // Silent Mode Functions
-        function startSilentMode() {
-            if (emergencyTriggered) return;
+            if (number.length < 10) {
+                alert('कृपया valid मोबाइल नंबर डालें');
+                return;
+            }
+
+            const contact = { name, number };
+            contacts.push(contact);
             
-            silentArea.classList.add('active');
-            silentArea.textContent = 'Holded!'; // Feedback
-            silentArea.style.pointerEvents = 'none'; // Prevent multiple interactions
-
-            silentTimer = setTimeout(() => {
-                triggerEmergency();
-            }, 2000); // 2 seconds for silent mode
-        }
-
-        function stopSilentMode() {
-            if (silentTimer) {
-                clearTimeout(silentTimer);
-                silentTimer = null;
-            }
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactNumber').value = '';
             
-            silentArea.classList.remove('active');
-            silentArea.textContent = 'Hold for Silent Emergency'; // Reset text
-            silentArea.style.pointerEvents = 'auto'; // Re-enable interaction
-        }
-
-        // Start location sharing
-        function startLocationSharing() {
-            stopLocationSharing(); // Clear any existing interval
-            if (locationFrequency > 0) {
-                locationSharingInterval = setInterval(() => {
-                    shareLocationUpdate();
-                }, locationFrequency * 1000);
-                console.log(`Location sharing started every ${locationFrequency} seconds.`);
-                shareLocationUpdate(); // Perform an initial update immediately
-            } else {
-                console.log('Location sharing set to only once.');
-                shareLocationUpdate(); // Share location once if frequency is 0
+            updateContactList();
+            saveContacts();
+            
+            if (contacts.length > 0) {
+                document.getElementById('startBtn').style.display = 'block';
             }
         }
 
-        // Stop location sharing
-        function stopLocationSharing() {
-            if (locationSharingInterval) {
-                clearInterval(locationSharingInterval);
-                locationSharingInterval = null;
-                console.log('Location sharing stopped.');
-            }
-        }
-
-        // Share location update
-        function shareLocationUpdate() {
-            getCurrentLocation().then(location => {
-                const message = `📍 Regular location update: ${location} | Battery: ${batteryLevel}%`;
-                console.log('Location update:', message);
-                
-                const now = new Date();
-                lastUpdateSpan.textContent = now.toLocaleTimeString();
-
-                // In a real app, you would send this via SMS or API
-                // Example: sendSMS(emergencyContacts.map(c => c.number).join(';'), message);
-
-            }).catch(error => {
-                console.error('Location sharing failed:', error);
-                lastUpdateSpan.textContent = 'Failed';
+        // Update contact list display
+        function updateContactList() {
+            const list = document.getElementById('contactList');
+            list.innerHTML = '';
+            
+            contacts.forEach((contact, index) => {
+                const item = document.createElement('div');
+                item.className = 'contact-item';
+                item.innerHTML = `
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-number">${contact.number}</div>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="removeContact(${index})">
+                        हटाएं
+                    </button>
+                `;
+                list.appendChild(item);
             });
         }
 
-        // Update location frequency display
-        function updateLocationFrequencyDisplay() {
-            const freqMap = {
-                60: 'Every 1 minute',
-                300: 'Every 5 minutes',
-                600: 'Every 10 minutes',
-                0: 'Only once'
-            };
-            currentFreqSpan.textContent = freqMap[locationFrequency] || 'Custom';
+        // Remove contact
+        function removeContact(index) {
+            contacts.splice(index, 1);
+            updateContactList();
+            saveContacts();
+            
+            if (contacts.length === 0) {
+                document.getElementById('startBtn').style.display = 'none';
+            }
         }
 
-        // Update status display
-        function updateStatus(message, type) {
-            statusDiv.innerHTML = `<p>${message}</p><p>Voice Recognition Count: <span id="voiceCount">${voiceCount}</span>/3</p>`;
-            statusDiv.className = `status ${type}`; // Apply appropriate class
+        // Save contacts to localStorage
+        function saveContacts() {
+            // Note: In a real app, this would save to a server
+            // For demo purposes, we'll just store in memory
+            console.log('Contacts saved:', contacts);
+        }
+
+        // Load contacts from localStorage
+        function loadContacts() {
+            // Note: In a real app, this would load from a server
+            // For demo purposes, we'll just load from memory
+            console.log('Contacts loaded:', contacts);
+        }
+
+        // Start main app
+        function startApp() {
+            if (contacts.length === 0) {
+                alert('कृपया कम से कम एक संपर्क जोड़ें');
+                return;
+            }
+
+            document.getElementById('setupForm').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            init();
+        }
+
+        // Show settings
+        function showSettings() {
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('setupForm').style.display = 'block';
+            updateContactList();
         }
 
         // Trigger emergency
         function triggerEmergency() {
-            if (emergencyTriggered) return; // Prevent multiple triggers
-            emergencyTriggered = true;
+            document.getElementById('status').textContent = 'आपातकाल सक्रिय! संपर्क कर रहे हैं...';
+            document.getElementById('status').className = 'status emergency';
             
-            stopVoiceRecognition();
-            stopLocationSharing();
+            // Log emergency
+            const timestamp = new Date().toLocaleString('hi-IN');
+            const log = `${timestamp}: आपातकाल सक्रिय किया गया`;
+            emergencyLogs.unshift(log);
+            updateEmergencyLog();
             
-            // Stop SOS timer if active
-            if (sosTimer) {
-                clearInterval(sosTimer);
-                sosTimer = null;
-            }
-            sosButton.disabled = true; // Keep disabled after trigger
-            sosButton.classList.remove('pressing');
-            sosProgress.style.width = '0%';
-            
-            // Stop Silent mode timer if active
-            if (silentTimer) {
-                clearTimeout(silentTimer);
-                silentTimer = null;
-            }
-            silentArea.classList.remove('active');
-            silentArea.style.pointerEvents = 'none';
-            
-            // Strong vibration
-            if (isVibrationEnabled) {
-                vibrate([500, 200, 500, 200, 500]);
-            }
-            
-            updateStatus('🚨 EMERGENCY TRIGGERED! Calling for help...', 'alert');
-            
-            // Get current location and then proceed
-            getCurrentLocation().then(location => {
-                makeEmergencyCalls(location);
-                sendLocationSMS(location);
-            }).catch(error => {
-                console.error("Error getting location for emergency:", error);
-                updateStatus('🚨 EMERGENCY TRIGGERED! Location unavailable. Attempting calls/SMS.', 'alert');
-                makeEmergencyCalls("Location unavailable");
-                sendLocationSMS("Location unavailable");
+            // Send emergency alerts to all contacts
+            contacts.forEach(contact => {
+                sendEmergencyAlert(contact);
             });
-
-            // Auto-reset after a period
-            setTimeout(resetEmergency, 90000); // Reset after 90 seconds
+            
+            // Send emergency to connected apps
+            sendEmergencyToConnectedApps();
+            
+            // Reset status after 10 seconds
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'सुनने की स्थिति: तैयार';
+                document.getElementById('status').className = 'status';
+            }, 10000);
         }
 
-        // Get current location
-        function getCurrentLocation() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) {
-                    return reject('Geolocation not supported');
+        // Send emergency alert
+        function sendEmergencyAlert(contact) {
+            const locationText = currentLocation ? 
+                `Location: https://maps.google.com/maps?q=${currentLocation.latitude},${currentLocation.longitude}` : 
+                'Location: उपलब्ध नहीं';
+            
+            const message = `🚨 EMERGENCY ALERT! 
+मुझे मदद की जरूरत है। कृपया तुरंत संपर्क करें।
+${locationText}
+Time: ${new Date().toLocaleString('hi-IN')}`;
+
+            // In a real app, this would use actual APIs
+            console.log(`Emergency alert sent to ${contact.name} (${contact.number})`);
+            console.log('Message:', message);
+            
+            // Simulate call
+            simulateCall(contact);
+            
+            // Log the action
+            const log = `${new Date().toLocaleString('hi-IN')}: ${contact.name} को alert भेजा गया`;
+            emergencyLogs.unshift(log);
+            updateEmergencyLog();
+        }
+
+        // Simulate emergency call
+        function simulateCall(contact) {
+            // In a real app, this would use telephony APIs
+            console.log(`Emergency call initiated to ${contact.name} (${contact.number})`);
+            
+            // Show notification
+            if (Notification.permission === 'granted') {
+                new Notification('Emergency Call', {
+                    body: `Calling ${contact.name}...`,
+                    icon: '🚨'
+                });
+            }
+        }
+
+        // Update emergency log
+        function updateEmergencyLog() {
+            const logContainer = document.getElementById('emergencyLog');
+            logContainer.innerHTML = '';
+            
+            emergencyLogs.slice(0, 10).forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.textContent = log;
+                logContainer.appendChild(logItem);
+            });
+        }
+
+        // Request notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            console.log('Emergency Safety App loaded');
+        });
+
+        // Generate unique app ID
+        function generateMyAppId() {
+            if (!myAppId) {
+                myAppId = 'ESA-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
+            }
+            document.getElementById('myAppId').textContent = myAppId;
+            return myAppId;
+        }
+
+        // Generate QR Code
+        function generateQRCode() {
+            const qrData = {
+                appId: myAppId,
+                appName: 'Emergency Safety App',
+                timestamp: Date.now(),
+                type: 'EMERGENCY_APP_CONNECTION'
+            };
+
+            QRCode.toCanvas(document.createElement('canvas'), JSON.stringify(qrData), {
+                width: 200,
+                height: 200,
+                colorDark: '#000',
+                colorLight: '#fff',
+                correctLevel: QRCode.CorrectLevel.M
+            }, function (error, canvas) {
+                if (error) {
+                    console.error('QR Code generation error:', error);
+                    return;
                 }
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        const locationUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-                        resolve(locationUrl);
-                    },
-                    error => reject(error),
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // Increased timeout and disable cache
-                );
-            });
-        }
-
-        // Make emergency calls to all contacts
-        function makeEmergencyCalls(location) {
-            const message = `🚨 EMERGENCY ALERT! I need immediate help. My location: ${location} | Battery: ${batteryLevel}% | Time: ${new Date().toLocaleString()}`;
-            
-            emergencyContacts.forEach((contact, index) => {
-                setTimeout(() => {
-                    // Simulate making a call - this only opens the dialer
-                    window.open(`tel:${contact.number}`, '_blank');
-                    console.log(`Attempting call to ${contact.name} (${contact.number})`);
-                }, index * 1500); // Stagger calls by 1.5 seconds
-            });
-            updateStatus(`📞 Initiated calls to ${emergencyContacts.length} contacts.`, 'success');
-        }
-
-        // Send location SMS to all contacts
-        function sendLocationSMS(location) {
-            const message = `🚨 EMERGENCY ALERT! I need immediate help. My location: ${location} | Battery: ${batteryLevel}% | Time: ${new Date().toLocaleString()}`;
-            
-            emergencyContacts.forEach((contact, index) => {
-                setTimeout(() => {
-                    // Simulate sending SMS - this only opens the SMS composer
-                    window.open(`sms:${contact.number}?body=${encodeURIComponent(message)}`, '_blank');
-                    console.log(`Attempting SMS to ${contact.name} (${contact.number})`);
-                }, (index + 1) * 2000); // Stagger SMS by 2 seconds
-            });
-            updateStatus(`📱 Sent emergency SMS to ${emergencyContacts.length} contacts.`, 'success');
-        }
-
-        // Test emergency function
-        function testEmergency() {
-            if (confirm('Are you sure you want to test emergency mode? This will call/message your emergency contacts.')) {
-                voiceCount = 3; // Simulate voice detection
-                triggerEmergency();
-            }
-        }
-
-        // Test vibration
-        function testVibration() {
-            if (isVibrationEnabled) {
-                vibrate([200, 100, 200]);
-                const tempStatusDiv = document.createElement('div');
-                tempStatusDiv.className = 'vibration-test';
-                tempStatusDiv.textContent = '📳 Testing Vibration...';
                 
-                // Temporarily replace status content
-                const originalStatusHTML = statusDiv.innerHTML;
-                statusDiv.innerHTML = tempStatusDiv.outerHTML;
-                statusDiv.className = 'status alert'; // Style for test
+                const qrDisplay = document.getElementById('qrCodeDisplay');
+                qrDisplay.innerHTML = '';
+                qrDisplay.appendChild(canvas);
+            });
+        }
 
-                setTimeout(() => {
-                    statusDiv.innerHTML = originalStatusHTML; // Restore original status
-                    // Re-apply current status type if needed
-                    const currentStatusType = statusDiv.classList.contains('listening') ? 'listening' :
-                                              statusDiv.classList.contains('alert') ? 'alert' :
-                                              statusDiv.classList.contains('success') ? 'success' :
-                                              'warning';
-                    statusDiv.className = `status ${currentStatusType}`;
-                }, 1500);
-            } else {
-                alert('Vibration alerts are disabled in settings.');
+        // Start QR Scanner
+        function startQRScanner() {
+            const video = document.getElementById('qrVideo');
+            const scanner = document.getElementById('qrScanner');
+            const startBtn = document.querySelector('.btn-scan');
+            const stopBtn = document.getElementById('stopScanBtn');
+
+            scanner.style.display = 'block';
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+
+            // Initialize QR Scanner
+            qrScanner = new QrScanner(video, 
+                result => {
+                    handleQRScanResult(result);
+                },
+                {
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+
+            qrScanner.start().then(() => {
+                isScanning = true;
+                console.log('QR Scanner started');
+            }).catch(err => {
+                console.error('QR Scanner error:', err);
+                alert('Camera access नहीं मिल रही। कृपया camera permission दें।');
+                stopQRScanner();
+            });
+        }
+
+        // Stop QR Scanner
+        function stopQRScanner() {
+            if (qrScanner) {
+                qrScanner.stop();
+                qrScanner.destroy();
+                qrScanner = null;
+            }
+
+            const scanner = document.getElementById('qrScanner');
+            const startBtn = document.querySelector('.btn-scan');
+            const stopBtn = document.getElementById('stopScanBtn');
+
+            scanner.style.display = 'none';
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+            isScanning = false;
+        }
+
+        // Handle QR scan result
+        function handleQRScanResult(result) {
+            try {
+                const qrData = JSON.parse(result);
+                
+                if (qrData.type === 'EMERGENCY_APP_CONNECTION' && qrData.appId !== myAppId) {
+                    connectToApp(qrData);
+                    stopQRScanner();
+                } else if (qrData.appId === myAppId) {
+                    alert('आप अपना ही QR code scan कर रहे हैं!');
+                } else {
+                    alert('Invalid QR code format');
+                }
+            } catch (error) {
+                console.error('QR parsing error:', error);
+                alert('Invalid QR code');
             }
         }
 
-        // Reset emergency state
-        function resetEmergency() {
-            emergencyTriggered = false;
-            voiceCount = 0;
-            updateStatus('👍 Safety mode reset. Ready to protect.', 'listening');
-            startVoiceRecognition(); // Restart listening
-            startLocationSharing(); // Restart location sharing if applicable
-        }
-
-        // Vibration function
-        function vibrate(pattern) {
-            if (!('vibrate' in navigator) || !isVibrationEnabled) {
-                console.log("Vibration not supported or disabled.");
+        // Connect to another app
+        function connectToApp(qrData) {
+            // Check if already connected
+            const existing = connectedApps.find(app => app.appId === qrData.appId);
+            if (existing) {
+                alert('यह app पहले से connected है!');
                 return;
             }
-            navigator.vibrate(pattern);
+
+            const newConnection = {
+                appId: qrData.appId,
+                appName: qrData.appName || 'Emergency Safety App',
+                connectedAt: Date.now(),
+                status: 'connected'
+            };
+
+            connectedApps.push(newConnection);
+            updateConnectedApps();
+            
+            // Log connection
+            const log = `${new Date().toLocaleString('hi-IN')}: App ${qrData.appId} से जुड़ा गया`;
+            emergencyLogs.unshift(log);
+            updateEmergencyLog();
+
+            alert(`Successfully connected to ${newConnection.appName}!`);
+            showTab('connections');
         }
 
-        // Helper to update settings display from main screen
-        function updateSettingsDisplay() {
-            backgroundModeToggle.checked = isBackgroundMode;
-            vibrationModeToggle.checked = isVibrationEnabled;
+        // Update connected apps display
+        function updateConnectedApps() {
+            const container = document.getElementById('connectedApps');
+            const noConnections = document.getElementById('noConnections');
+            
+            container.innerHTML = '';
+            
+            if (connectedApps.length === 0) {
+                noConnections.style.display = 'block';
+                return;
+            }
+            
+            noConnections.style.display = 'none';
+            
+            connectedApps.forEach((app, index) => {
+                const appElement = document.createElement('div');
+                appElement.className = 'connected-app';
+                appElement.innerHTML = `
+                    <div class="app-info">
+                        <div class="app-name">${app.appName}</div>
+                        <div class="app-id">ID: ${app.appId}</div>
+                        <div class="connection-status">✅ Connected</div>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="disconnectApp(${index})">
+                        Disconnect
+                    </button>
+                `;
+                container.appendChild(appElement);
+            });
         }
 
-        // --- Event Listeners for Toggles ---
-        backgroundModeToggle.addEventListener('change', () => {
-            isBackgroundMode = backgroundModeToggle.checked;
-            console.log("Background Mode:", isBackgroundMode);
-            // Actual background mode implementation would require Service Workers
-        });
+        // Disconnect app
+        function disconnectApp(index) {
+            const app = connectedApps[index];
+            if (confirm(`${app.appName} को disconnect करना चाहते हैं?`)) {
+                connectedApps.splice(index, 1);
+                updateConnectedApps();
+                
+                // Log disconnection
+                const log = `${new Date().toLocaleString('hi-IN')}: App ${app.appId} से disconnect किया गया`;
+                emergencyLogs.unshift(log);
+                updateEmergencyLog();
+            }
+        }
 
-        vibrationModeToggle.addEventListener('change', () => {
-            isVibrationEnabled = vibrationModeToggle.checked;
-            console.log("Vibration Alerts:", isVibrationEnabled);
-        });
+        // Show tab
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
 
+        // Send emergency alert to connected apps
+        function sendEmergencyToConnectedApps() {
+            connectedApps.forEach(app => {
+                // In a real app, this would send actual network requests
+                console.log(`Emergency alert sent to connected app: ${app.appId}`);
+                
+                // Simulate emergency notification to connected app
+                const emergencyData = {
+                    type: 'EMERGENCY_ALERT',
+                    fromApp: myAppId,
+                    message: '🚨 EMERGENCY ALERT! मुझे मदद की जरूरत है।',
+                    location: currentLocation,
+                    timestamp: Date.now()
+                };
+                
+                // In real implementation, you would send this via WebSocket, WebRTC, or server
+                console.log('Emergency data sent:', emergencyData);
+                
+                // Log the action
+                const log = `${new Date().toLocaleString('hi-IN')}: ${app.appName} को emergency alert भेजा गया`;
+                emergencyLogs.unshift(log);
+            });
+        }
     </script>
 </body>
 </html>
