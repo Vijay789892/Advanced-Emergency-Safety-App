@@ -260,11 +260,108 @@
 
         .qr-code-display {
             text-align: center;
-            padding: 20px;
+            padding: 30px 20px;
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             margin: 15px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 2px solid #f0f0f0;
+        }
+
+        .qr-header {
+            margin-bottom: 20px;
+        }
+
+        .qr-app-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        .qr-app-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .qr-accepted-text {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .qr-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .qr-code-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .qr-code-canvas {
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .qr-center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .qr-app-id {
+            font-family: monospace;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .qr-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .qr-copyright {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #999;
         }
 
         .qr-scanner {
@@ -524,10 +621,10 @@
         function init() {
             requestLocationPermission();
             setupSpeechRecognition();
-            loadContacts();
+            loadContacts(); // Note: This is currently a placeholder. Real loading would involve localStorage or server.
             generateMyAppId();
             generateQRCode();
-            updateConnectedApps();
+            updateConnectedApps(); // Ensure connected apps are loaded/displayed on init
         }
 
         // Request location permission
@@ -544,8 +641,12 @@
                     (error) => {
                         document.getElementById('locationStatus').innerHTML = 
                             '📍 स्थान की अनुमति नहीं मिली';
+                        console.error('Geolocation error:', error);
                     }
                 );
+            } else {
+                document.getElementById('locationStatus').innerHTML = 
+                    '📍 आपका डिवाइस Geolocation का समर्थन नहीं करता';
             }
         }
 
@@ -563,7 +664,7 @@
                 recognition = new webkitSpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.lang = 'hi-IN';
+                recognition.lang = 'hi-IN'; // Set language to Hindi
 
                 recognition.onstart = () => {
                     isListening = true;
@@ -583,10 +684,18 @@
 
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
-                    restartListening();
+                    // If it's a permission error, inform the user
+                    if (event.error === 'not-allowed' || event.error === 'denied') {
+                        alert('माइक्रोफ़ोन अनुमति अस्वीकृत। कृपया अपने ब्राउज़र की सेटिंग में अनुमति दें।');
+                        isListening = false; // Stop listening if permission is denied
+                        updateStatusToIdle();
+                    } else {
+                        restartListening(); // Try to restart for other errors
+                    }
                 };
 
                 recognition.onend = () => {
+                    // Only restart if the user hasn't explicitly stopped listening or if it was due to an error
                     if (isListening) {
                         restartListening();
                     }
@@ -595,23 +704,42 @@
                 startListening();
             } else {
                 document.getElementById('status').textContent = 'आपका ब्राउज़र voice recognition support नहीं करता';
+                updateStatusToIdle();
             }
         }
 
         // Start listening
         function startListening() {
-            if (recognition) {
-                recognition.start();
+            if (recognition && !isListening) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Failed to start speech recognition:", e);
+                    alert("Speech recognition शुरू करने में समस्या। कृपया पेज रीलोड करें।");
+                    updateStatusToIdle();
+                }
             }
         }
 
-        // Restart listening
+        // Restart listening after a short delay
         function restartListening() {
             setTimeout(() => {
-                if (isListening) {
-                    recognition.start();
+                if (isListening) { // Only restart if we are still supposed to be listening
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error("Failed to restart speech recognition:", e);
+                    }
                 }
-            }, 1000);
+            }, 1000); // Wait 1 second before restarting
+        }
+        
+        // Update status to idle when not listening
+        function updateStatusToIdle() {
+             document.getElementById('status').textContent = 'सुनने की स्थिति: तैयार';
+             document.getElementById('status').className = 'status';
+             document.getElementById('voiceCircle').classList.remove('listening');
+             isListening = false; // Ensure this flag is reset
         }
 
         // Check for "bachao" words
@@ -620,17 +748,18 @@
             const bachaoWords = ['बचाओ', 'bachao', 'बचाव', 'bachav', 'help', 'हेल्प'];
             
             let foundBachao = false;
-            bachaoWords.forEach(word => {
+            for (const word of bachaoWords) {
                 if (text.includes(word)) {
                     foundBachao = true;
+                    break; 
                 }
-            });
+            }
 
             if (foundBachao) {
-                if (now - lastBachaoTime < 5000) { // 5 seconds window
+                if (now - lastBachaoTime < 5000) { // 5 seconds window for repeated "bachao"
                     bachaoCount++;
                 } else {
-                    bachaoCount = 1;
+                    bachaoCount = 1; // Reset count if the gap is too large
                 }
                 
                 lastBachaoTime = now;
@@ -640,7 +769,7 @@
                 
                 if (bachaoCount >= 3) {
                     triggerEmergency();
-                    bachaoCount = 0;
+                    bachaoCount = 0; // Reset after triggering
                 }
             }
         }
@@ -655,8 +784,9 @@
                 return;
             }
 
-            if (number.length < 10) {
-                alert('कृपया valid मोबाइल नंबर डालें');
+            // Basic validation for Indian phone numbers (10 digits)
+            if (!/^[6789]\d{9}$/.test(number)) {
+                alert('कृपया एक मान्य 10-अंकीय भारतीय मोबाइल नंबर डालें');
                 return;
             }
 
@@ -667,8 +797,9 @@
             document.getElementById('contactNumber').value = '';
             
             updateContactList();
-            saveContacts();
+            saveContacts(); // This will save to memory for now
             
+            // Show start button only if there are contacts
             if (contacts.length > 0) {
                 document.getElementById('startBtn').style.display = 'block';
             }
@@ -699,45 +830,51 @@
         function removeContact(index) {
             contacts.splice(index, 1);
             updateContactList();
-            saveContacts();
+            saveContacts(); // Save changes
             
+            // Hide start button if no contacts left
             if (contacts.length === 0) {
                 document.getElementById('startBtn').style.display = 'none';
             }
         }
 
-        // Save contacts to localStorage
+        // Save contacts to localStorage (example)
         function saveContacts() {
-            // Note: In a real app, this would save to a server
-            // For demo purposes, we'll just store in memory
-            console.log('Contacts saved:', contacts);
+            localStorage.setItem('emergencyContacts', JSON.stringify(contacts));
+            console.log('Contacts saved to localStorage.');
         }
 
         // Load contacts from localStorage
         function loadContacts() {
-            // Note: In a real app, this would load from a server
-            // For demo purposes, we'll just load from memory
-            console.log('Contacts loaded:', contacts);
+            const savedContacts = localStorage.getItem('emergencyContacts');
+            if (savedContacts) {
+                contacts = JSON.parse(savedContacts);
+                updateContactList();
+                if (contacts.length > 0) {
+                    document.getElementById('startBtn').style.display = 'block';
+                }
+                console.log('Contacts loaded from localStorage.');
+            }
         }
 
         // Start main app
         function startApp() {
             if (contacts.length === 0) {
-                alert('कृपया कम से कम एक संपर्क जोड़ें');
+                alert('कृपया कम से कम एक संपर्क जोड़ें।');
                 return;
             }
 
             document.getElementById('setupForm').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             
-            init();
+            init(); // Initialize after switching to main app view
         }
 
-        // Show settings
+        // Show settings (back to setup form)
         function showSettings() {
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('setupForm').style.display = 'block';
-            updateContactList();
+            updateContactList(); // Ensure the list is current
         }
 
         // Trigger emergency
@@ -759,30 +896,37 @@
             // Send emergency to connected apps
             sendEmergencyToConnectedApps();
             
-            // Reset status after 10 seconds
+            // Reset status after a duration
             setTimeout(() => {
-                document.getElementById('status').textContent = 'सुनने की स्थिति: तैयार';
-                document.getElementById('status').className = 'status';
-            }, 10000);
+                updateStatusToIdle();
+            }, 10000); // Reset after 10 seconds
         }
 
         // Send emergency alert
         function sendEmergencyAlert(contact) {
             const locationText = currentLocation ? 
-                `Location: https://maps.google.com/maps?q=${currentLocation.latitude},${currentLocation.longitude}` : 
+                `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}` : 
                 'Location: उपलब्ध नहीं';
             
             const message = `🚨 EMERGENCY ALERT! 
 मुझे मदद की जरूरत है। कृपया तुरंत संपर्क करें।
-${locationText}
+Location: ${locationText}
 Time: ${new Date().toLocaleString('hi-IN')}`;
 
-            // In a real app, this would use actual APIs
-            console.log(`Emergency alert sent to ${contact.name} (${contact.number})`);
+            // In a real app, this would use actual APIs for SMS, calls, etc.
+            // For demonstration, we'll log the action and simulate notifications.
+            console.log(`Simulating emergency alert to ${contact.name} (${contact.number})`);
             console.log('Message:', message);
             
-            // Simulate call
-            simulateCall(contact);
+            // Simulate call (only if permission is granted)
+            if (Notification.permission === 'granted') {
+                new Notification('Emergency Call', {
+                    body: `Calling ${contact.name} (${contact.number})...`,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/100/100010.png' // Example siren icon
+                });
+            } else if (Notification.permission === 'default') {
+                 alert("कृपया नोटिफिकेशन अनुमति दें ताकि आप आपातकालीन कॉल की सूचना प्राप्त कर सकें।");
+            }
             
             // Log the action
             const log = `${new Date().toLocaleString('hi-IN')}: ${contact.name} को alert भेजा गया`;
@@ -790,25 +934,12 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             updateEmergencyLog();
         }
 
-        // Simulate emergency call
-        function simulateCall(contact) {
-            // In a real app, this would use telephony APIs
-            console.log(`Emergency call initiated to ${contact.name} (${contact.number})`);
-            
-            // Show notification
-            if (Notification.permission === 'granted') {
-                new Notification('Emergency Call', {
-                    body: `Calling ${contact.name}...`,
-                    icon: '🚨'
-                });
-            }
-        }
-
         // Update emergency log
         function updateEmergencyLog() {
             const logContainer = document.getElementById('emergencyLog');
             logContainer.innerHTML = '';
             
+            // Display latest 10 logs
             emergencyLogs.slice(0, 10).forEach(log => {
                 const logItem = document.createElement('div');
                 logItem.className = 'log-item';
@@ -817,20 +948,16 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             });
         }
 
-        // Request notification permission
+        // Request notification permission on load if not already granted
         if (Notification.permission === 'default') {
             Notification.requestPermission();
         }
 
-        // Initialize when page loads
-        window.addEventListener('load', () => {
-            console.log('Emergency Safety App loaded');
-        });
-
         // Generate unique app ID
         function generateMyAppId() {
             if (!myAppId) {
-                myAppId = 'ESA-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
+                // A simple way to generate a unique ID
+                myAppId = 'ESA-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             }
             document.getElementById('myAppId').textContent = myAppId;
             return myAppId;
@@ -841,36 +968,55 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             const qrData = {
                 appId: myAppId,
                 appName: 'Emergency Safety App',
-                timestamp: Date.now(),
                 type: 'EMERGENCY_APP_CONNECTION'
             };
 
-            QRCode.toCanvas(document.createElement('canvas'), JSON.stringify(qrData), {
-                width: 200,
-                height: 200,
-                colorDark: '#000',
-                colorLight: '#fff',
-                correctLevel: QRCode.CorrectLevel.M
-            }, function (error, canvas) {
+            const qrCodeDisplayElement = document.getElementById('qrCodeDisplay');
+            qrCodeDisplayElement.innerHTML = `
+                <div class="qr-header">
+                    <div class="qr-app-logo">🚨</div>
+                    <div class="qr-app-name">Emergency Safety</div>
+                    <div class="qr-accepted-text">CONNECTION AVAILABLE</div>
+                    <div class="qr-description">Scan & Connect Using Emergency Safety App</div>
+                </div>
+                <div class="qr-code-container">
+                    <canvas id="qrCanvas" class="qr-code-canvas"></canvas>
+                    <div class="qr-center-logo">🚨</div>
+                </div>
+                <div class="qr-app-id">${myAppId}</div>
+                <div class="qr-footer">
+                    <div>© 2025, All rights reserved, Emergency Safety App</div>
+                    <div class="qr-copyright">(Secure Emergency Communication System)</div>
+                </div>
+            `;
+
+            const canvas = document.getElementById('qrCanvas');
+
+            QRCode.toCanvas(canvas, JSON.stringify(qrData), {
+                width: 250, // Increased size for better clarity
+                height: 250,
+                margin: 4, // Slightly more margin
+                color: {
+                    dark: '#000000', // Black for QR code modules
+                    light: '#FFFFFF'  // White for background
+                },
+                correctLevel: QRCode.CorrectLevel.H // High error correction
+            }, function (error) {
                 if (error) {
                     console.error('QR Code generation error:', error);
-                    return;
+                    qrCodeDisplayElement.innerHTML = '<p style="color: red;">QR Code बनाने में त्रुटि!</p>';
                 }
-                
-                const qrDisplay = document.getElementById('qrCodeDisplay');
-                qrDisplay.innerHTML = '';
-                qrDisplay.appendChild(canvas);
             });
         }
 
         // Start QR Scanner
         function startQRScanner() {
             const video = document.getElementById('qrVideo');
-            const scanner = document.getElementById('qrScanner');
+            const scannerContainer = document.getElementById('qrScanner');
             const startBtn = document.querySelector('.btn-scan');
             const stopBtn = document.getElementById('stopScanBtn');
 
-            scanner.style.display = 'block';
+            scannerContainer.style.display = 'block';
             startBtn.style.display = 'none';
             stopBtn.style.display = 'block';
 
@@ -882,6 +1028,8 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
                 {
                     highlightScanRegion: true,
                     highlightCodeOutline: true,
+                    // Set preferred camera if available, e.g., back camera
+                    preferredCamera: 'environment' 
                 }
             );
 
@@ -890,8 +1038,8 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
                 console.log('QR Scanner started');
             }).catch(err => {
                 console.error('QR Scanner error:', err);
-                alert('Camera access नहीं मिल रही। कृपया camera permission दें।');
-                stopQRScanner();
+                alert('कैमरा एक्सेस नहीं मिल रहा। कृपया कैमरा अनुमति दें या सुनिश्चित करें कि आपका डिवाइस वेबकैम का समर्थन करता है।');
+                stopQRScanner(); // Clean up if start fails
             });
         }
 
@@ -903,11 +1051,11 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
                 qrScanner = null;
             }
 
-            const scanner = document.getElementById('qrScanner');
+            const scannerContainer = document.getElementById('qrScanner');
             const startBtn = document.querySelector('.btn-scan');
             const stopBtn = document.getElementById('stopScanBtn');
 
-            scanner.style.display = 'none';
+            scannerContainer.style.display = 'none';
             startBtn.style.display = 'block';
             stopBtn.style.display = 'none';
             isScanning = false;
@@ -918,32 +1066,33 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             try {
                 const qrData = JSON.parse(result);
                 
-                if (qrData.type === 'EMERGENCY_APP_CONNECTION' && qrData.appId !== myAppId) {
+                // Validate the scanned QR code data
+                if (qrData && qrData.type === 'EMERGENCY_APP_CONNECTION' && qrData.appId && qrData.appId !== myAppId) {
                     connectToApp(qrData);
-                    stopQRScanner();
-                } else if (qrData.appId === myAppId) {
+                    stopQRScanner(); // Stop scanning after a successful connection attempt
+                } else if (qrData && qrData.appId === myAppId) {
                     alert('आप अपना ही QR code scan कर रहे हैं!');
                 } else {
-                    alert('Invalid QR code format');
+                    alert('अमान्य QR कोड प्रारूप। कृपया केवल संगत ऐप का QR कोड स्कैन करें।');
                 }
             } catch (error) {
                 console.error('QR parsing error:', error);
-                alert('Invalid QR code');
+                alert('अमान्य QR कोड। कृपया सही प्रारूप में QR कोड स्कैन करें।');
             }
         }
 
         // Connect to another app
         function connectToApp(qrData) {
-            // Check if already connected
+            // Check if already connected to prevent duplicates
             const existing = connectedApps.find(app => app.appId === qrData.appId);
             if (existing) {
-                alert('यह app पहले से connected है!');
+                alert('यह ऐप पहले से कनेक्टेड है!');
                 return;
             }
 
             const newConnection = {
                 appId: qrData.appId,
-                appName: qrData.appName || 'Emergency Safety App',
+                appName: qrData.appName || 'Unknown App', // Use a fallback name
                 connectedAt: Date.now(),
                 status: 'connected'
             };
@@ -951,28 +1100,28 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             connectedApps.push(newConnection);
             updateConnectedApps();
             
-            // Log connection
-            const log = `${new Date().toLocaleString('hi-IN')}: App ${qrData.appId} से जुड़ा गया`;
+            // Log connection action
+            const log = `${new Date().toLocaleString('hi-IN')}: App "${qrData.appName || qrData.appId}" से जुड़ा गया`;
             emergencyLogs.unshift(log);
             updateEmergencyLog();
 
             alert(`Successfully connected to ${newConnection.appName}!`);
-            showTab('connections');
+            showTab('connections'); // Switch to connections tab after successful connection
         }
 
         // Update connected apps display
         function updateConnectedApps() {
             const container = document.getElementById('connectedApps');
-            const noConnections = document.getElementById('noConnections');
+            const noConnectionsMessage = document.getElementById('noConnections');
             
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear previous list
             
             if (connectedApps.length === 0) {
-                noConnections.style.display = 'block';
+                noConnectionsMessage.style.display = 'block';
                 return;
             }
             
-            noConnections.style.display = 'none';
+            noConnectionsMessage.style.display = 'none'; // Hide message if there are connections
             
             connectedApps.forEach((app, index) => {
                 const appElement = document.createElement('div');
@@ -994,18 +1143,18 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
         // Disconnect app
         function disconnectApp(index) {
             const app = connectedApps[index];
-            if (confirm(`${app.appName} को disconnect करना चाहते हैं?`)) {
+            if (confirm(`क्या आप "${app.appName}" को डिस्कनेक्ट करना चाहते हैं?`)) {
                 connectedApps.splice(index, 1);
                 updateConnectedApps();
                 
-                // Log disconnection
-                const log = `${new Date().toLocaleString('hi-IN')}: App ${app.appId} से disconnect किया गया`;
+                // Log disconnection action
+                const log = `${new Date().toLocaleString('hi-IN')}: App "${app.appName || app.appId}" से disconnect किया गया`;
                 emergencyLogs.unshift(log);
                 updateEmergencyLog();
             }
         }
 
-        // Show tab
+        // Show tab content
         function showTab(tabName) {
             // Hide all tab contents
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1015,36 +1164,58 @@ Time: ${new Date().toLocaleString('hi-IN')}`;
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => tab.classList.remove('active'));
             
-            // Show selected tab content
+            // Show the selected tab content
             document.getElementById(tabName).classList.add('active');
             
-            // Add active class to clicked tab
+            // Add active class to the clicked tab button
             event.target.classList.add('active');
         }
 
         // Send emergency alert to connected apps
         function sendEmergencyToConnectedApps() {
             connectedApps.forEach(app => {
-                // In a real app, this would send actual network requests
-                console.log(`Emergency alert sent to connected app: ${app.appId}`);
+                // In a real application, you would use WebSockets, server-side logic,
+                // or another communication mechanism to send this data to the connected app.
+                console.log(`Simulating emergency alert to connected app: ${app.appId} (${app.appName})`);
                 
-                // Simulate emergency notification to connected app
                 const emergencyData = {
                     type: 'EMERGENCY_ALERT',
-                    fromApp: myAppId,
+                    fromAppId: myAppId,
+                    fromAppName: 'Emergency Safety App',
                     message: '🚨 EMERGENCY ALERT! मुझे मदद की जरूरत है।',
                     location: currentLocation,
                     timestamp: Date.now()
                 };
                 
-                // In real implementation, you would send this via WebSocket, WebRTC, or server
-                console.log('Emergency data sent:', emergencyData);
-                
-                // Log the action
+                // Log the simulated sending action
                 const log = `${new Date().toLocaleString('hi-IN')}: ${app.appName} को emergency alert भेजा गया`;
                 emergencyLogs.unshift(log);
+                updateEmergencyLog();
+
+                // You could potentially use a placeholder function here to represent sending:
+                // sendDataToConnectedApp(app.appId, emergencyData); 
             });
         }
+
+        // Placeholder for sending data to a connected app
+        // function sendDataToConnectedApp(appId, data) {
+        //     // In a real scenario, this would involve network requests, WebSockets, etc.
+        //     console.log(`Sending data to ${appId}:`, data);
+        // }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Emergency Safety App loaded');
+            loadContacts(); // Load contacts first
+            // Only switch to main app if contacts are already set up
+            // Otherwise, the setup form will be displayed
+            if (contacts.length > 0) {
+                // Auto-start if contacts are present
+                // document.getElementById('startBtn').style.display = 'block';
+                // For now, we let the user click "Start App"
+            }
+        });
+
     </script>
 </body>
 </html>
